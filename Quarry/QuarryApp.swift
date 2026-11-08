@@ -2,8 +2,6 @@
 //  QuarryApp.swift
 //  Quarry
 //
-//  Created by Rohan George on 11/8/26.
-//
 
 import SwiftUI
 import SwiftData
@@ -11,13 +9,10 @@ import SwiftData
 @main
 struct QuarryApp: App {
     var sharedModelContainer: ModelContainer = {
-        let schema = Schema([
-            Item.self,
-        ])
-        let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
-
+        let schema = Schema([Hunt.self, Checkpoint.self])
+        let configuration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
         do {
-            return try ModelContainer(for: schema, configurations: [modelConfiguration])
+            return try ModelContainer(for: schema, configurations: [configuration])
         } catch {
             fatalError("Could not create ModelContainer: \(error)")
         }

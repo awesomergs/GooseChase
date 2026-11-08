@@ -1,55 +1,91 @@
 //
-//  ContentView.swift
-//  Quarry
-//
-//  Created by Rohan George on 11/8/26.
+//  ContentView.swift  ·  OWNER: Person B (hunt flow)
+//  Bare-bones starting flow: hunt list → play → camera stub → next clue.
+//  Replace freely; it exists so all three of you can test end to end today.
 //
 
 import SwiftUI
 import SwiftData
 
 struct ContentView: View {
-    @Environment(\.modelContext) private var modelContext
-    @Query private var items: [Item]
+    @Environment(\.modelContext) private var context
+    @Query(sort: \Hunt.createdAt) private var hunts: [Hunt]
+    @State private var session: HuntSession?
 
     var body: some View {
-        NavigationSplitView {
-            List {
-                ForEach(items) { item in
-                    NavigationLink {
-                        Text("Item at \(item.timestamp, format: Date.FormatStyle(date: .numeric, time: .standard))")
+        NavigationStack {
+            List(hunts) { hunt in
+                Button {
+                    let s = HuntSession(hunt: hunt)
+                    s.start()
+                    session = s
+                } label: {
+                    VStack(alignment: .leading) {
+                        Text(hunt.title).font(.headline)
+                        Text("\(hunt.checkpoints.count) checkpoints").font(.subheadline).foregroundStyle(.secondary)
+                    }
+                }
+            }
+            .navigationTitle("Quarry")
+            .fullScreenCover(item: $session) { s in
+                PlayView(session: s) { session = nil }
+            }
+        }
+        .onAppear { DemoData.seedIfEmpty(context) }
+        .task { await LiveActivityManager.shared.endAllStale() }
+    }
+}
+
+extension HuntSession: Identifiable {}
+
+struct PlayView: View {
+    @Bindable var session: HuntSession
+    let onClose: () -> Void
+    @State private var showCamera = false
+
+    var body: some View {
+        NavigationStack {
+            VStack(spacing: 24) {
+                if let cp = session.current {
+                    Text("Checkpoint \(session.progressText)")
+                        .font(.headline).foregroundStyle(.secondary)
+                    Text(cp.clue)
+                        .font(.title2.weight(.semibold))
+                        .multilineTextAlignment(.center)
+                    Button {
+                        showCamera = true
                     } label: {
-                        Text(item.timestamp, format: Date.FormatStyle(date: .numeric, time: .standard))
+                        Label("Open camera", systemImage: "camera.fill")
+                            .frame(maxWidth: .infinity)
                     }
+                    .buttonStyle(.borderedProminent)
+                    .controlSize(.large)
+                } else {
+                    Image(systemName: "flag.checkered").font(.system(size: 56))
+                    Text("Hunt complete!").font(.largeTitle.bold())
+                    Text(session.startDate, style: .timer).font(.title.monospacedDigit())
                 }
-                .onDelete(perform: deleteItems)
             }
+            .padding(24)
             .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    EditButton()
-                }
-                ToolbarItem {
-                    Button(action: addItem) {
-                        Label("Add Item", systemImage: "plus")
+                ToolbarItem(placement: .topBarLeading) {
+                    Button("End", systemImage: "xmark") {
+                        if session.current != nil { session.quit() }
+                        onClose()
                     }
                 }
             }
-        } detail: {
-            Text("Select an item")
-        }
-    }
-
-    private func addItem() {
-        withAnimation {
-            let newItem = Item(timestamp: Date())
-            modelContext.insert(newItem)
-        }
-    }
-
-    private func deleteItems(offsets: IndexSet) {
-        withAnimation {
-            for index in offsets {
-                modelContext.delete(items[index])
+            .fullScreenCover(isPresented: $showCamera) {
+                if let cp = session.current {
+                    VerifyCameraView(checkpoint: cp) {
+                        showCamera = false
+                        session.clearCurrent()
+                    }
+                }
+            }
+            // Tapping the Live Activity / Dynamic Island opens quarry://camera
+            .onOpenURL { url in
+                if url.host == "camera", session.current != nil { showCamera = true }
             }
         }
     }
@@ -57,5 +93,5 @@ struct ContentView: View {
 
 #Preview {
     ContentView()
-        .modelContainer(for: Item.self, inMemory: true)
+        .modelContainer(for: [Hunt.self, Checkpoint.self], inMemory: true)
 }

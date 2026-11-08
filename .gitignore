@@ -1,0 +1,14 @@
+# macOS
+.DS_Store
+
+# Xcode per-user files (window layout, scheme order). Each teammate has their own.
+xcuserdata/
+*.xcuserstate
+
+# Build output
+DerivedData/
+build/
+
+# Swift Package Manager
+.swiftpm/
+.build/

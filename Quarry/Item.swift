@@ -1,18 +1,2 @@
-//
-//  Item.swift
-//  Quarry
-//
-//  Created by Rohan George on 11/8/26.
-//
-
-import Foundation
-import SwiftData
-
-@Model
-final class Item {
-    var timestamp: Date
-    
-    init(timestamp: Date) {
-        self.timestamp = timestamp
-    }
-}
+// Intentionally empty: the template's sample model was replaced by Shared/Models.swift.
+// Safe to delete in Xcode (right-click → Delete → Move to Trash).

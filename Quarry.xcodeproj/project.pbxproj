@@ -6,14 +6,75 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		A0413DD930A0FBFB00047453 /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A0413DD830A0FBFB00047453 /* WidgetKit.framework */; };
+		A0413DDB30A0FBFB00047453 /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A0413DDA30A0FBFB00047453 /* SwiftUI.framework */; };
+		A0413DEA30A0FBFD00047453 /* QuarryWidgetsExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = A0413DD630A0FBFB00047453 /* QuarryWidgetsExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		A0413DE830A0FBFD00047453 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = A0413DBA30A0F9B600047453 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = A0413DD530A0FBFB00047453;
+			remoteInfo = QuarryWidgetsExtension;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		A0413DEF30A0FBFD00047453 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				A0413DEA30A0FBFD00047453 /* QuarryWidgetsExtension.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
 		A0413DC230A0F9B600047453 /* Quarry.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Quarry.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		A0413DD630A0FBFB00047453 /* QuarryWidgetsExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = QuarryWidgetsExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		A0413DD830A0FBFB00047453 /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
+		A0413DDA30A0FBFB00047453 /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		A0413DEB30A0FBFD00047453 /* Exceptions for "QuarryWidgets" folder in "QuarryWidgetsExtension" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = A0413DD530A0FBFB00047453 /* QuarryWidgetsExtension */;
+		};
+		A0413DF030A0FBFD00047453 /* Exceptions for "Quarry" folder in "QuarryWidgetsExtension" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Shared/HuntActivityAttributes.swift,
+			);
+			target = A0413DD530A0FBFB00047453 /* QuarryWidgetsExtension */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		A0413DC430A0F9B600047453 /* Quarry */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				A0413DF030A0FBFD00047453 /* Exceptions for "Quarry" folder in "QuarryWidgetsExtension" target */,
+			);
 			path = Quarry;
+			sourceTree = "<group>";
+		};
+		A0413DDC30A0FBFB00047453 /* QuarryWidgets */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				A0413DEB30A0FBFD00047453 /* Exceptions for "QuarryWidgets" folder in "QuarryWidgetsExtension" target */,
+			);
+			path = QuarryWidgets;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -26,6 +87,15 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		A0413DD330A0FBFB00047453 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A0413DDB30A0FBFB00047453 /* SwiftUI.framework in Frameworks */,
+				A0413DD930A0FBFB00047453 /* WidgetKit.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -33,6 +103,8 @@
 			isa = PBXGroup;
 			children = (
 				A0413DC430A0F9B600047453 /* Quarry */,
+				A0413DDC30A0FBFB00047453 /* QuarryWidgets */,
+				A0413DD730A0FBFB00047453 /* Frameworks */,
 				A0413DC330A0F9B600047453 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -41,8 +113,18 @@
 			isa = PBXGroup;
 			children = (
 				A0413DC230A0F9B600047453 /* Quarry.app */,
+				A0413DD630A0FBFB00047453 /* QuarryWidgetsExtension.appex */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		A0413DD730A0FBFB00047453 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				A0413DD830A0FBFB00047453 /* WidgetKit.framework */,
+				A0413DDA30A0FBFB00047453 /* SwiftUI.framework */,
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -55,10 +137,12 @@
 				A0413DBE30A0F9B600047453 /* Sources */,
 				A0413DBF30A0F9B600047453 /* Frameworks */,
 				A0413DC030A0F9B600047453 /* Resources */,
+				A0413DEF30A0FBFD00047453 /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				A0413DE930A0FBFD00047453 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				A0413DC430A0F9B600047453 /* Quarry */,
@@ -69,6 +153,28 @@
 			productName = Quarry;
 			productReference = A0413DC230A0F9B600047453 /* Quarry.app */;
 			productType = "com.apple.product-type.application";
+		};
+		A0413DD530A0FBFB00047453 /* QuarryWidgetsExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = A0413DEC30A0FBFD00047453 /* Build configuration list for PBXNativeTarget "QuarryWidgetsExtension" */;
+			buildPhases = (
+				A0413DD230A0FBFB00047453 /* Sources */,
+				A0413DD330A0FBFB00047453 /* Frameworks */,
+				A0413DD430A0FBFB00047453 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				A0413DDC30A0FBFB00047453 /* QuarryWidgets */,
+			);
+			name = QuarryWidgetsExtension;
+			packageProductDependencies = (
+			);
+			productName = QuarryWidgetsExtension;
+			productReference = A0413DD630A0FBFB00047453 /* QuarryWidgetsExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
 		};
 /* End PBXNativeTarget section */
 
@@ -81,6 +187,9 @@
 				LastUpgradeCheck = 2600;
 				TargetAttributes = {
 					A0413DC130A0F9B600047453 = {
+						CreatedOnToolsVersion = 26.0.1;
+					};
+					A0413DD530A0FBFB00047453 = {
 						CreatedOnToolsVersion = 26.0.1;
 					};
 				};
@@ -100,12 +209,20 @@
 			projectRoot = "";
 			targets = (
 				A0413DC130A0F9B600047453 /* Quarry */,
+				A0413DD530A0FBFB00047453 /* QuarryWidgetsExtension */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
 		A0413DC030A0F9B600047453 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		A0413DD430A0FBFB00047453 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -122,7 +239,22 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		A0413DD230A0FBFB00047453 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		A0413DE930A0FBFD00047453 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = A0413DD530A0FBFB00047453 /* QuarryWidgetsExtension */;
+			targetProxy = A0413DE830A0FBFD00047453 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		A0413DCD30A0F9B800047453 /* Debug */ = {
@@ -253,6 +385,8 @@
 				CURRENT_PROJECT_VERSION = 1;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSCameraUsageDescription = "Quarry uses the camera to check that you found the right thing.";
+				INFOPLIST_KEY_NSSupportsLiveActivities = YES;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -284,6 +418,8 @@
 				CURRENT_PROJECT_VERSION = 1;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSCameraUsageDescription = "Quarry uses the camera to check that you found the right thing.";
+				INFOPLIST_KEY_NSSupportsLiveActivities = YES;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -299,6 +435,64 @@
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		A0413DED30A0FBFD00047453 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = QuarryWidgets/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = QuarryWidgets;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = rgs.Quarry.QuarryWidgets;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		A0413DEE30A0FBFD00047453 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = QuarryWidgets/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = QuarryWidgets;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = rgs.Quarry.QuarryWidgets;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
@@ -323,6 +517,15 @@
 			buildConfigurations = (
 				A0413DD030A0F9B800047453 /* Debug */,
 				A0413DD130A0F9B800047453 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		A0413DEC30A0FBFD00047453 /* Build configuration list for PBXNativeTarget "QuarryWidgetsExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A0413DED30A0FBFD00047453 /* Debug */,
+				A0413DEE30A0FBFD00047453 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
