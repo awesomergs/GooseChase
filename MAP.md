@@ -63,11 +63,11 @@ One file is compiled into both targets: `Quarry/Shared/HuntActivityAttributes.sw
 | `NearbySession.swift` | *(to be created)* MultipeerConnectivity host/join by room code, `send(_:)`, `receivedHunt`, `startAt`, forwards race messages to `RaceSession`. |
 | `QRCodeView.swift`, `HostLobbyView.swift`, `JoinView.swift` | *(to be created)* QR display, host lobby with "Start for everyone", join screen with code field + QR scanner. |
 
-### `Quarry/Race/` (C) · planned (PLAN.md v3 C2)
+### `Quarry/Race/` (C)
 | File | Contains |
 |---|---|
-| `RaceSession.swift` | *(to be created)* standings, `begin`, `reportProgress`, `receive`, `rank(of:)`, `end`. |
-| `LeaderboardView.swift` | *(to be created)* live standings list. |
+| `RaceSession.swift` | `@Observable @MainActor RaceSession.shared`: `isActive`, `isHost`, `huntShareID`, `startDate`, sorted `players`, `me`, `myRank`, `racerCount`, `myID`; `sendHandler` (set by NearbySession; nil = solo); `begin(huntShareID:total:isHost:startAt:)`, `reportProgress(cleared:total:)`, `receive(_:)`, `rank(of:)`, `finishTime(of:)`, `end()`; `static sorted(_:)`; `static preview()` for #Previews. |
+| `LeaderboardView.swift` | `LeaderboardView(race: = .shared)`: list of `LeaderboardRow`s (rank badge, "You", segmented progress, finish time), spring reordering, selection haptic on rank change; empty state. Previews "Racing" / "Empty". |
 
 ### `Quarry/Location/` (A) · stretch goal (contract in SPEC.md)
 | File | Contains |
