@@ -161,6 +161,7 @@ enum PlayerIdentity { static var id: String; static var name: String }   // pers
     func send(_ message: NearbyMessage)                // host → all; player → host
     func stop()
 }   // forwards .hello / .progress / .leaderboard to RaceSession.shared.receive(_:)
+    // and on init sets: RaceSession.shared.sendHandler = { [weak self] in self?.send($0) }
 struct QRCodeView: View { init(url: URL) }
 struct HostLobbyView: View { init(hunt: Hunt, package: HuntPackage, onStart: (Date) -> Void) }   // QR, code, players, "Start for everyone"
 struct JoinView: View { init(initialCode: String?, onJoined: (HuntPackage) -> Void) }          // name, code field, QR scanner, waiting state
@@ -168,15 +169,19 @@ struct JoinView: View { init(initialCode: String?, onJoined: (HuntPackage) -> Vo
 
 ### Race (C provides in `Quarry/Race/`)
 ```swift
-@Observable @MainActor final class RaceSession {        // RaceSession.shared
-    var isActive: Bool, isHost: Bool, huntShareID: UUID?, players: [PlayerProgress]   // sorted standings
-    func begin(huntShareID: UUID, total: Int, isHost: Bool)
+@Observable @MainActor final class RaceSession {        // RaceSession.shared  (BUILT)
+    var isActive: Bool, isHost: Bool, huntShareID: UUID?, startDate: Date?
+    var players: [PlayerProgress]                      // sorted standings
+    var me: PlayerProgress?, myRank: Int?, racerCount: Int, myID: String
+    var sendHandler: ((NearbyMessage) -> Void)?        // A's NearbySession sets this; nil = solo play
+    func begin(huntShareID: UUID, total: Int, isHost: Bool, startAt: Date = .now)   // keeps lobby hellos
     func reportProgress(cleared: Int, total: Int)      // B's HuntSession calls after each clear
     func receive(_ message: NearbyMessage)             // A's NearbySession forwards race messages
     func rank(of id: String) -> Int?
-    func end()
+    func finishTime(of: PlayerProgress) -> TimeInterval?
+    func end()                                         // also call before hosting a new race
 }
-struct LeaderboardView: View { init() }                 // reads RaceSession.shared
+struct LeaderboardView: View { init(race: RaceSession = .shared) }   // (BUILT)
 ```
 
 ### Location (stretch · A provides in `Quarry/Location/`, B embeds)
