@@ -33,7 +33,7 @@ struct HuntLiveActivity: Widget {
                 DynamicIslandExpandedRegion(.bottom) {
                     VStack(alignment: .leading, spacing: 10) {
                         if context.state.justCleared {
-                            Label("Cleared! Next clue unlocked", systemImage: "checkmark.circle.fill")
+                            Label(context.state.clue, systemImage: "checkmark.circle.fill")
                                 .font(.headline)
                                 .foregroundStyle(.green)
                         } else {
@@ -108,11 +108,16 @@ struct LockScreenHuntView: View {
                     .foregroundStyle(.yellow)
                     .frame(maxWidth: 60)
             }
-            Text(context.state.justCleared ? "Cleared!" : context.state.clue)
+            Text(context.state.clue)
                 .font(.caption)
                 .lineLimit(2)
         }
         .padding(10)
+    }
+
+    /// A segment is filled once that checkpoint is cleared.
+    private func isDone(_ i: Int) -> Bool {
+        i < context.state.checkpointIndex || (context.state.justCleared && i == context.state.checkpointIndex)
     }
 
     /// iPhone Lock Screen / banner.
@@ -127,15 +132,21 @@ struct LockScreenHuntView: View {
                     .frame(maxWidth: 70)
             }
 
-            Text(context.state.justCleared ? "Cleared! Next clue unlocked." : context.state.clue)
-                .font(.headline)
-                .lineLimit(2)
+            if context.state.justCleared {
+                Label(context.state.clue, systemImage: "checkmark.circle.fill")
+                    .font(.headline)
+                    .foregroundStyle(.green)
+            } else {
+                Text(context.state.clue)
+                    .font(.headline)
+                    .lineLimit(2)
+            }
 
             // Segmented progress bar
             HStack(spacing: 4) {
                 ForEach(1...max(context.attributes.totalCheckpoints, 1), id: \.self) { i in
                     Capsule()
-                        .fill(i < context.state.checkpointIndex ? Color.indigo
+                        .fill(isDone(i) ? Color.indigo
                               : i == context.state.checkpointIndex ? Color.indigo.opacity(0.45)
                               : Color.secondary.opacity(0.25))
                         .frame(height: 5)

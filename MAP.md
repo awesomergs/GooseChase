@@ -51,7 +51,7 @@ One file is compiled into both targets: `Quarry/Shared/HuntActivityAttributes.sw
 ### `Quarry/LiveActivity/` (C)
 | File | Contains |
 |---|---|
-| `LiveActivityManager.swift` | `@MainActor final class LiveActivityManager`, `.shared`: `start(huntTitle:totalCheckpoints:firstClue:)` · `cleared(index:clue:) async` (alert pops the island) · `advance(to:clue:) async` · `end(finalMessage:) async` · `endAllStale() async`. Local updates only, no push. |
+| `LiveActivityManager.swift` | `@MainActor final class LiveActivityManager`, `.shared`: `start(huntTitle:totalCheckpoints:firstClue:)` · `cleared(index:clue:) async` (green "cleared" state) · `advance(to:clue:) async` · `end(finalMessage:) async` (activity lingers 3 min) · `endAllStale() async`. Local updates only, no push. |
 
 ### `QuarryWidgets/` (C; widget extension target)
 | File | Contains |
@@ -71,5 +71,6 @@ One file is compiled into both targets: `Quarry/Shared/HuntActivityAttributes.sw
 |---|---|
 | `SPEC.md` | Scope, contracts, work split, timeline, demo, conventions, rules for agents. |
 | `MAP.md` | This file. |
+| `PLAN.md` | Today's schedule: per-person tasks, agent prompts, merge steps, demo checklist. |
 | `AGENTS.md`, `CLAUDE.md` | Point coding agents to `SPEC.md` + `MAP.md`. |
 | `README.md` | Quick team overview. |

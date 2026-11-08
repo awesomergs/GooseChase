@@ -39,7 +39,7 @@ Read `SPEC.md` (what we're building) and `MAP.md` (where the code is) first. Thi
 3. **Build.** Pick your iPhone (or a simulator) at the top of Xcode → ⌘R. You should see "Quarry" with a "Birthday Hunt" row. Tap it, then "Open camera," then "Pretend cleared." The whole flow works as a stub.
 4. **Your branch.** GitHub Desktop → Branch → New Branch: `vision` (A), `hunt` (B), `live-activity` (C).
 5. **Agent.** Xcode → Settings → Intelligence → pick Claude Agent or Codex (USC students get Codex free) → sign in.
-6. **SwiftUI Pro skill** is already in the repo (`.agents/skills/swiftui-pro`, plus `.claude/skills/swiftui-pro` for Claude). Nothing to install. To use it, tell your agent: "Use the SwiftUI Pro skill" (or `/swiftui-pro` in Claude, `$swiftui-pro` in Codex).
+6. **Agent skills are already in the repo** (`.agents/skills/` and `.claude/skills/`): **SwiftUI Pro** (everyone), **SwiftData Pro** (B), **Swift Concurrency Pro** (A: Vision off the main thread). Nothing to install. Invoke with "Use the SwiftUI Pro skill" (or `/swiftui-pro` in Claude, `$swiftui-pro` in Codex). Good habit: after a big change, ask "Use the SwiftUI Pro skill to review what you just wrote."
 7. **First message to your agent** (paste once at the start of each new conversation):
    > Read AGENTS.md, SPEC.md and MAP.md in the repo root. I am Person [A/B/C]. Summarize in 3 bullets what I own, which files I'm allowed to edit, and the contracts I must keep. Don't change any code yet.
 
@@ -151,7 +151,7 @@ Write and rehearse the **Problem** slide story (30 seconds): the birthday party,
 Until your phone updates, use the **iPhone 17 Pro Simulator** (it supports Live Activities and the Dynamic Island).
 1. Switch the scheme to `QuarryWidgetsExtension` → open `QuarryWidgets/QuarryWidgetsLiveActivity.swift` → check all 4 previews render.
 2. Switch the scheme back to `Quarry` → run → tap Birthday Hunt → swipe home → the island shows `1/3` + timer → lock (⌘L in the Simulator) → the Lock Screen shows the activity.
-3. "Pretend cleared" → the island pops open with "Checkpoint cleared!"
+3. "Pretend cleared" → go Home → the island shows 2/3. Long-press it → "Open camera" opens the app's camera. (iOS hides the activity while the app is open, so there is no pop-open on clear.)
 
 If anything fails:
 > /plan The Live Activity does not appear when HuntSession.start() runs. Read MAP.md. Check LiveActivityManager, HuntActivityAttributes target membership (it must be in both Quarry and QuarryWidgetsExtension), the NSSupportsLiveActivities build setting, and QuarryWidgetsBundle. Explain the cause before changing anything.
@@ -171,7 +171,7 @@ In GitHub Desktop:
 ### C5 · 1:30–2:15 · Watch + alert + stale cleanup
 - If anyone has an Apple Watch on watchOS 11+: pair it with the demo phone, start a hunt, and raise your wrist. The Smart Stack should show the `.small` layout.
 - Confirm that relaunching the app ends leftover activities (`endAllStale` in ContentView).
-- Check the alert on clear makes the island expand on the demo phone.
+- Check that "Open camera" in the expanded island opens the camera on the demo phone, and that the activity disappears ~3 minutes after finishing.
 
 ### C6 · 2:15–2:45 · App icon (Icon Composer, not AI)
 1. Xcode → Open Developer Tool → Icon Composer.
@@ -221,7 +221,7 @@ Take screenshots on the demo phone (side button + volume up) for slide 3 and as 
 - [ ] App icon shows on the Home Screen
 - [ ] Demo hunt has references for objects that are physically in the room
 - [ ] Wrong object → ring stays low; right object → clears in under 2 s
-- [ ] The island appears on Start and pops open on clear
+- [ ] The island appears on Start (go Home), updates after each clear, and "Open camera" jumps into the camera
 - [ ] The Lock Screen shows the clue + progress
 - [ ] (If a watch) the Smart Stack shows the hunt
 - [ ] Phone: charged, Do Not Disturb, Auto-Lock = Never

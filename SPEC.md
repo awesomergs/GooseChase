@@ -2,7 +2,7 @@
 
 **iOSC Fall 2026 Hackathon · Sunday Nov 8 · team of 3 · hacking 10:30am → submit 6:30pm → pitch 7:00pm**
 
-> If you are a coding agent: read this whole file before changing code. The "Rules for agents" section is binding.
+> If you are a coding agent: read this whole file and `MAP.md` before changing code. The "Rules for agents" section is binding.
 
 ---
 
@@ -14,7 +14,7 @@
 
 **One-sentence flow:** pick a hunt → read the clue → find the thing → point the camera → the ring fills → cleared → next clue.
 
-**The moment judges remember:** the confidence ring around the shutter fills as you aim at the right object, then auto-captures with a success haptic, and the Dynamic Island pops open saying "Checkpoint cleared!"
+**The moment judges remember:** the confidence ring around the shutter fills as you aim at the right object, then auto-captures with a success haptic. Lock the phone and the hunt is still there on the Lock Screen and in the Dynamic Island, one tap from the camera.
 
 ---
 
@@ -36,7 +36,7 @@
 1. A seeded demo hunt plus the ability to **create a hunt**: add checkpoints with a clue and 2–3 reference photos.
 2. **Play a hunt:** clue screen → camera → Vision verifies → cleared screen → next clue → finish screen with total time.
 3. **Exact-match verification:** compare camera frames to the reference photos' feature prints, with a live confidence ring and auto-capture.
-4. **Live Activity:** Lock Screen + Dynamic Island (compact, minimal, expanded) showing checkpoint X of Y, the clue and an elapsed timer; it pops open on clear.
+4. **Live Activity:** Lock Screen + Dynamic Island (compact, minimal, expanded) showing checkpoint X of Y, the clue and an elapsed timer; tapping it (or "Open camera" in the expanded island) jumps straight to the camera. It ends 3 minutes after the hunt finishes.
 5. **Apple Watch:** the same Live Activity in the Smart Stack (free via `.supplementalActivityFamilies([.small])`; no Watch app target).
 6. **Haptics** on progress, success and error.
 7. App icon (Icon Composer), polished with system components and Liquid Glass.
@@ -71,29 +71,11 @@ The visual mock-ups are on the team design canvas (Quarry iOS Mock-ups). The rac
 
 ---
 
-## 5. Code map (what exists right now)
+## 5. Code map
 
-```
-Quarry/
-├── QuarryApp.swift              App entry, SwiftData container [Hunt, Checkpoint]
-├── ContentView.swift            (B) Temporary root: hunt list + PlayView. Replace freely.
-├── Shared/                      CONTRACT: change only after telling the team
-│   ├── Models.swift             Hunt, Checkpoint, CheckpointKind (SwiftData @Model)
-│   └── HuntActivityAttributes.swift   Live Activity data (compiled into app AND widget extension)
-├── Hunt/                        (B)
-│   ├── HuntSession.swift        @Observable: current checkpoint, start/clearCurrent/quit → drives Live Activity
-│   └── DemoData.swift           Seeds a 3-checkpoint "Birthday Hunt" if the store is empty
-├── Vision/                      (A)
-│   ├── VisionMatcher.swift      makeReferencePrint(from:), bestDistance(from:to:), score(forDistance:)
-│   └── VerifyCameraView.swift   STUB with a "Pretend cleared" button. A replaces the body.
-└── LiveActivity/                (C)
-    └── LiveActivityManager.swift   start / cleared / advance / end / endAllStale
-QuarryWidgets/                   (C) Widget extension target "QuarryWidgetsExtension"
-├── QuarryWidgetsBundle.swift    Bundle body = HuntLiveActivity() only
-└── QuarryWidgetsLiveActivity.swift   Lock Screen, Dynamic Island, Watch (.small) layouts + previews
-```
-
-`Item.swift`, `QuarryWidgets.swift` and `QuarryWidgetsControl.swift` are empty placeholders and can be deleted.
+See **`MAP.md`** for every file, what it contains, who owns it, and how data flows between them.
+Short version: `Quarry/Shared/` = contract, `Quarry/Vision/` = A, `Quarry/Hunt/` + `ContentView.swift` = B,
+`Quarry/LiveActivity/` + `QuarryWidgets/` = C.
 
 ---
 
@@ -138,7 +120,7 @@ VisionMatcher.score(forDistance: Float) -> Double                       // 0...1
 ### Live Activity (C provides, B's HuntSession calls)
 ```swift
 LiveActivityManager.shared.start(huntTitle:totalCheckpoints:firstClue:)
-await LiveActivityManager.shared.cleared(index:clue:)    // pops the island open with an alert
+await LiveActivityManager.shared.cleared(index:clue:)    // green "Checkpoint N cleared!" state for ~3 s
 await LiveActivityManager.shared.advance(to:clue:)
 await LiveActivityManager.shared.end(finalMessage:)
 await LiveActivityManager.shared.endAllStale()           // on launch, clears leftovers
@@ -174,7 +156,7 @@ Done when: on the phone, pointing at the reference object fills the ring and cle
 Done when: you can create a 3-checkpoint hunt from scratch on the phone and play it start to finish.
 
 ### Person C (Rohan): Platform + pitch (`Quarry/LiveActivity/`, `QuarryWidgets/`)
-- [ ] Live Activity verified on a real phone: compact, minimal, expanded, Lock Screen; alert pop on clear.
+- [ ] Live Activity verified on a real phone: compact, minimal, expanded, Lock Screen; "Open camera" deep link works.
 - [ ] Watch Smart Stack layout verified (if someone has an Apple Watch on watchOS 11+).
 - [ ] Polish the island: SF Symbols, indigo keyline, readable timer width.
 - [ ] Owns all project settings, targets and capabilities (`project.pbxproj`).
@@ -182,7 +164,7 @@ Done when: you can create a 3-checkpoint hunt from scratch on the phone and play
 - [ ] Keynote deck (4 slides) + demo script rehearsal by 6:30.
 - Stretch: App Intent "Open camera" button in the expanded island.
 
-Done when: starting the demo hunt shows the island within 1 s; clearing a checkpoint pops it open with "Checkpoint cleared!"
+Done when: starting the demo hunt and going Home shows the island within 1 s; progress updates after each clear; tapping the island opens the camera; the activity ends 3 minutes after finishing.
 
 ---
 
@@ -206,7 +188,7 @@ Done when: starting the demo hunt shows the island within 1 s; clearing a checkp
 1. "Here's a hunt I made for my niece's party." Open the hunt and tap **Start**. *The Dynamic Island appears with "1/3" and a ticking timer.*
 2. Read the clue aloud. Lock the phone briefly. *The Lock Screen shows the clue and progress.*
 3. Unlock, tap **Open camera**, and point at a wrong object. *The ring stays low.*
-4. Point at the right object. *The ring fills, auto-captures, buzz, "Cleared!"; the island pops open.*
+4. Point at the right object. *The ring fills, auto-captures, buzz, "Cleared!"* Go Home: *the island now shows 2/3.* Long-press the island → **Open camera** jumps straight back in.
 5. Show the watch: same progress on the wrist.
 6. (If time) Create a new checkpoint live: snap 2 photos of a judge's water bottle, tap **Test match**.
 
@@ -253,3 +235,4 @@ Done when: starting the demo hunt shows the island within 1 s; clearing a checkp
 5. Build after every change and fix all errors before reporting done. Don't claim something works without saying it was built.
 6. Prefer the simplest code that works today. This is an 8-hour hackathon; no abstractions "for later."
 7. When you finish a change, explain it in 2–3 plain sentences so the human can explain it to judges.
+8. **If you add, rename or delete a file, or change a public type or function, update `MAP.md` in the same change.**
