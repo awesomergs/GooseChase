@@ -12,6 +12,8 @@ struct NearbyDebugView: View {
     @Query(sort: \Hunt.createdAt) private var hunts: [Hunt]
     @State private var code = ""
     @State private var name = PlayerIdentity.name
+    @State private var lobbyHunt: Hunt?
+    @State private var showJoin = false
     private var nearby = NearbySession.shared
     private var race = RaceSession.shared
 
@@ -19,15 +21,25 @@ struct NearbyDebugView: View {
         NavigationStack {
             Form {
                 Section("This phone") {
+                    LabeledContent("Build", value: Self.buildStamp)
                     TextField("Your name", text: $name)
                         .onSubmit { PlayerIdentity.name = name }
-                    LabeledContent("Status", value: String(describing: nearby.status))
+                    LabeledContent("Status") {
+                        Text(String(describing: nearby.status)).multilineTextAlignment(.trailing)
+                    }
                     if let roomCode = nearby.roomCode {
                         LabeledContent("Room code", value: roomCode)
                     }
                 }
 
-                Section("Host") {
+                Section("Real screens (N3)") {
+                    ForEach(hunts) { hunt in
+                        Button("Open Host lobby for \"\(hunt.title)\"") { lobbyHunt = hunt }
+                    }
+                    Button("Open Join screen") { showJoin = true }
+                }
+
+                Section("Host (raw test)") {
                     ForEach(hunts) { hunt in
                         Button("Host \"\(hunt.title)\" (\(hunt.checkpoints.count))") {
                             PlayerIdentity.name = name
@@ -80,6 +92,17 @@ struct NearbyDebugView: View {
                     NavigationLink("Leaderboard") { LeaderboardView() }
                 }
 
+                Section("Log (newest first)") {
+                    if nearby.log.isEmpty {
+                        Text("Nothing yet").foregroundStyle(.secondary)
+                    }
+                    ForEach(Array(nearby.log.reversed().enumerated()), id: \.offset) { _, line in
+                        Text(line)
+                            .font(.caption.monospaced())
+                            .textSelection(.enabled)
+                    }
+                }
+
                 Section {
                     Button("Stop everything", role: .destructive) {
                         nearby.stop()
@@ -88,8 +111,18 @@ struct NearbyDebugView: View {
                 }
             }
             .navigationTitle("Nearby test")
+            .sheet(item: $lobbyHunt) { hunt in HostLobbyView(hunt: hunt) }
+            .sheet(isPresented: $showJoin) { JoinView() }
         }
     }
+
+    /// When this copy of the app was built. Both phones should show the same time.
+    static let buildStamp: String = {
+        guard let path = Bundle.main.executablePath,
+              let date = (try? FileManager.default.attributesOfItem(atPath: path))?[.modificationDate] as? Date
+        else { return "unknown" }
+        return date.formatted(date: .omitted, time: .standard)
+    }()
 
     /// Minimal conversion for testing; B's HuntPackage(hunt:) replaces this.
     static func debugPackage(for hunt: Hunt) -> HuntPackage {

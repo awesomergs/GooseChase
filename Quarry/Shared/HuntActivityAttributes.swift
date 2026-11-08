@@ -12,6 +12,7 @@ nonisolated struct HuntActivityAttributes: ActivityAttributes {
         var checkpointIndex: Int      // 1-based: "3 of 8"
         var clue: String
         var justCleared: Bool         // true briefly after a clear, for the success state
+        var finishedAt: Date? = nil   // set when the hunt is complete: timers freeze at this time
     }
 
     /// Fixed for the whole hunt.
