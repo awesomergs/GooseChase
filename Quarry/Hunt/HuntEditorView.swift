@@ -26,6 +26,12 @@ struct HuntEditorView: View {
                             Text(cp.clue.isEmpty ? "New checkpoint" : cp.clue)
                                 .foregroundStyle(cp.clue.isEmpty ? .secondary : .primary)
                                 .lineLimit(2)
+                            Spacer()
+                            if !cp.isReady {
+                                Image(systemName: "exclamationmark.triangle.fill")
+                                    .foregroundStyle(.orange)
+                                    .accessibilityLabel("Needs a reference photo")
+                            }
                         }
                     }
                 }
@@ -106,11 +112,13 @@ struct HuntEditorView: View {
     let schema = Schema([Hunt.self, Checkpoint.self])
     let config = ModelConfiguration(isStoredInMemoryOnly: true)
     let container = try! ModelContainer(for: schema, configurations: config)
+    // Insert both models into the context before relating them, or SwiftData
+    // traps in BackingData while resolving the relationship.
     let hunt = Hunt(title: "Birthday Hunt")
-    let cp = Checkpoint(order: 0, clue: "Find the thing that keeps the milk cold.", kind: .exactMatch)
-    cp.hunt = hunt
-    hunt.checkpoints.append(cp)
     container.mainContext.insert(hunt)
+    let cp = Checkpoint(order: 0, clue: "Find the thing that keeps the milk cold.", kind: .exactMatch)
+    container.mainContext.insert(cp)
+    cp.hunt = hunt
     return NavigationStack {
         HuntEditorView(hunt: hunt, path: $path)
     }
