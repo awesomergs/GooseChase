@@ -28,7 +28,7 @@ One file is compiled into both targets: `Quarry/Shared/HuntActivityAttributes.sw
 | File | Owner | Contains |
 |---|---|---|
 | `QuarryApp.swift` | C | `@main QuarryApp`: SwiftData `ModelContainer` with schema `[Hunt, Checkpoint]`. |
-| `ContentView.swift` | B | `ContentView` (hunt list, seeds demo data, ends stale Live Activities on launch); `PlayView(session:onClose:)` (clue screen, opens the camera, handles `quarry://camera`, finish state). Temporary; B may split it into `Hunt/` files. |
+| `ContentView.swift` | B | `ContentView` (`NavigationStack(path: NavigationPath)` hunt list with first-checkpoint thumbnail, "+" creates a `Hunt` and pushes `HuntEditorView`, per-row Edit/Delete swipe actions; seeds demo data, ends stale Live Activities on launch; registers `navigationDestination` for both `Hunt` and `Checkpoint`); `PlayView(session:onClose:)` (clue screen, opens the camera, handles `quarry://camera`, finish state). Temporary; B may split it into `Hunt/` files. |
 | `Item.swift` | n/a | Empty placeholder. Delete. |
 
 ### `Quarry/Shared/` (contract; change only after telling the team)
@@ -42,6 +42,9 @@ One file is compiled into both targets: `Quarry/Shared/HuntActivityAttributes.sw
 |---|---|
 | `HuntSession.swift` | `@Observable final class HuntSession`: `hunt`, `currentIndex`, `startDate`, `isFinished`; computed `checkpoints`, `current`, `progressText`; methods `start()`, `clearCurrent()`, `quit()`. **The only caller of `LiveActivityManager`.** Made `Identifiable` in `ContentView.swift`. |
 | `DemoData.swift` | `DemoData.seedIfEmpty(_ context:)`: inserts a 3-checkpoint "Birthday Hunt" (no reference photos yet). |
+| `HuntEditorView.swift` | `HuntEditorView(hunt:path:)`: `Form` to edit a `Hunt`'s title and list its `orderedCheckpoints` (clue + thumbnail). "Add checkpoint" creates a `Checkpoint` with the next `order` and pushes `CheckpointEditorView` by appending to the shared `NavigationPath`; swipe to delete (renormalizes `order`); drag to reorder (`EditButton`); deletes the hunt on exit if it's still an untouched "New Hunt". |
+| `CameraPicker.swift` | `CameraPicker(onImage:)`: `UIViewControllerRepresentable` wrapping `UIImagePickerController`; uses `.camera` on device, falls back to `.photoLibrary` in Simulator. Calls `onImage` then dismisses via `@Environment(\.dismiss)`. |
+| `CheckpointEditorView.swift` | `CheckpointEditorView(checkpoint:)`: `Form` with a clue `TextField` and a "Reference photos" section showing up to 3 thumbnails. Presents `CameraPicker`, calls `VisionMatcher.makeReferencePrint` on a detached background `Task`, appends to `checkpoint.referencePrints`, and stores a ≤300 px JPEG thumbnail. Shows `ProgressView` while processing and an inline red error on failure. |
 
 ### `Quarry/Vision/` (A)
 | File | Contains |
