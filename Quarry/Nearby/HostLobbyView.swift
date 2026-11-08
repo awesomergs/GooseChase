@@ -1,39 +1,41 @@
 //
-//  HostLobbyView.swift  ·  OWNER: Person C
-//  The host shows this: a big QR + room code, and a live list of who has joined.
-//  Present it as a sheet: HostLobbyView(hunt: hunt)
+//  HostLobbyView.swift  ·  The host's lobby: big QR + room code, who has joined,
+//  and "Start for everyone" (sends a synced start time; everyone counts down 3-2-1).
 //
 
 import SwiftUI
 
 struct HostLobbyView: View {
     let hunt: Hunt
-    /// Optional: the host taps "Play now" to start their own copy of the hunt.
-    var onPlay: (() -> Void)? = nil
+    /// Called with the synced start time; the caller launches the game on this phone too.
+    let onStart: (Date) -> Void
 
     @Environment(\.dismiss) private var dismiss
     private var nearby = NearbySession.shared
 
-    init(hunt: Hunt, onPlay: (() -> Void)? = nil) {
+    init(hunt: Hunt, onStart: @escaping (Date) -> Void) {
         self.hunt = hunt
-        self.onPlay = onPlay
+        self.onStart = onStart
     }
+
+    private var playerCount: Int { nearby.joinedPlayers.count }
 
     var body: some View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 24) {
                     VStack(spacing: 6) {
-                        Text("Scan to join")
-                            .font(.title2.bold())
                         Text(hunt.title)
-                            .font(.headline)
+                            .font(.title2.bold())
+                            .multilineTextAlignment(.center)
+                        Text("\(hunt.checkpoints.count) checkpoints · scan to join")
+                            .font(.subheadline)
                             .foregroundStyle(.secondary)
                     }
 
                     if let code = nearby.roomCode {
                         QRCodeView(url: RoomCode.joinURL(code))
-                            .frame(maxWidth: 280)
+                            .frame(maxWidth: 260)
 
                         VStack(spacing: 4) {
                             Text("or enter code")
@@ -47,70 +49,72 @@ struct HostLobbyView: View {
                         }
                     } else {
                         ProgressView("Starting…")
-                            .frame(height: 280)
+                            .frame(height: 260)
                     }
 
-                    playersSection
-
-                    Text("Keep this screen open until everyone has joined. Players need to be close to this phone.")
-                        .font(.footnote)
-                        .foregroundStyle(.secondary)
-                        .multilineTextAlignment(.center)
-                        .padding(.horizontal)
+                    playersCard
                 }
                 .padding(.vertical, 24)
                 .padding(.horizontal)
             }
             .background(Color(.systemGroupedBackground))
+            .safeAreaInset(edge: .bottom) {
+                Button {
+                    let date = Date.now.addingTimeInterval(4)
+                    if playerCount > 0 { nearby.startRace(at: date) }
+                    onStart(date)
+                } label: {
+                    Label(playerCount == 0 ? "Start solo" : "Start for everyone (\(playerCount + 1))",
+                          systemImage: "flag.checkered")
+                        .font(.headline)
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.borderedProminent)
+                .controlSize(.large)
+                .padding(.horizontal)
+                .padding(.bottom, 8)
+            }
             .navigationTitle("Host")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Done") {
+                    Button("Cancel") {
                         nearby.stop()
                         dismiss()
                     }
                 }
-                if let onPlay {
-                    ToolbarItem(placement: .confirmationAction) {
-                        Button("Play now") {
-                            nearby.stop()
-                            dismiss()
-                            onPlay()
-                        }
-                    }
-                }
             }
-            .sensoryFeedback(.success, trigger: nearby.joinedPlayers.count)
+            .sensoryFeedback(.success, trigger: playerCount)
             .onAppear {
                 if !nearby.isHosting {
-                    nearby.startHosting(package: HuntTransfer.package(for: hunt))
+                    var package = HuntPackage(hunt: hunt)
+                    if package.hostName.isEmpty { package.hostName = PlayerIdentity.name }
+                    nearby.startHosting(package: package)
                 }
             }
         }
     }
 
-    private var playersSection: some View {
+    private var playersCard: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack {
-                Text("Joined")
+                Text("Players")
                     .font(.headline)
                 Spacer()
-                Text("\(nearby.joinedPlayers.count)")
+                Text("\(playerCount)")
                     .font(.headline.monospacedDigit())
                     .foregroundStyle(.secondary)
             }
             if nearby.joinedPlayers.isEmpty {
                 HStack(spacing: 10) {
                     ProgressView()
-                    Text("Waiting for players…")
+                    Text("Waiting for players… keep this screen open.")
                         .foregroundStyle(.secondary)
                 }
                 .padding(.vertical, 6)
             } else {
                 ForEach(nearby.joinedPlayers, id: \.self) { name in
                     Label(name, systemImage: "checkmark.circle.fill")
-                        .foregroundStyle(.primary)
                         .symbolRenderingMode(.multicolor)
                         .transition(.move(edge: .top).combined(with: .opacity))
                 }

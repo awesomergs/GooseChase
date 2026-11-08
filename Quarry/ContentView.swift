@@ -1,239 +1,108 @@
 //
-//  ContentView.swift  ·  OWNER: Person B (hunt flow)
-//  Bare-bones starting flow: hunt list → play → camera stub → next clue.
-//  Replace freely; it exists so all three of you can test end to end today.
+//  ContentView.swift  ·  OWNER: Rohan (restructured into tabs)
+//  App shell: three tabs (Join | Host | Create) plus the shared game launcher
+//  (countdown + full-screen PlayView) and incoming links/files.
 //
 
 import SwiftUI
 import SwiftData
 
+enum AppTab: Hashable {
+    case join, host, create
+}
+
 struct ContentView: View {
     @Environment(\.modelContext) private var context
-    @Query(sort: \Hunt.createdAt) private var hunts: [Hunt]
-    @State private var session: HuntSession?
-    @State private var path = NavigationPath()
-    @State private var pendingSetupHunt: Hunt?
+    @State private var selection: AppTab = .join
+    @State private var game: GameLaunch?
     @State private var incomingPackage: IncomingPackage?
-    // Race entry points
-    @State private var hostingContext: HostingContext?
-    @State private var joinContext: JoinContext?
-    /// Passed to PlayView for synced race starts; nil for solo play.
-    @State private var pendingStartAt: Date?
-    /// Tracks the in-progress join while waiting for the host to start.
-    @State private var pendingJoinInfo: (hunt: Hunt, package: HuntPackage)?
+    /// Room code from a quarry://join link (iPhone Camera app scanned the host's QR).
+    @State private var linkCode: String?
 
     var body: some View {
-        NavigationStack(path: $path) {
-            List {
-                ForEach(hunts) { hunt in
-                    Button {
-                        if hunt.isPlayable {
-                            let s = HuntSession(hunt: hunt)
-                            s.start()
-                            session = s
-                        } else {
-                            pendingSetupHunt = hunt
-                        }
-                    } label: {
-                        HStack(spacing: 12) {
-                            thumbnail(for: hunt.orderedCheckpoints.first?.thumbnail)
-                            VStack(alignment: .leading) {
-                                Text(hunt.title).font(.headline)
-                                Text("\(hunt.checkpoints.count) checkpoints").font(.subheadline).foregroundStyle(.secondary)
-                                if !hunt.isPlayable {
-                                    Text(hunt.checkpoints.isEmpty ? "Add checkpoints" : "Needs photos")
-                                        .font(.caption)
-                                        .foregroundStyle(.orange)
-                                }
-                            }
-                        }
-                    }
-                    .swipeActions(edge: .leading) {
-                        Button {
-                            path.append(hunt)
-                        } label: {
-                            Label("Edit", systemImage: "pencil")
-                        }
-                        .tint(.indigo)
-                    }
-                    .swipeActions(edge: .trailing) {
-                        Button(role: .destructive) {
-                            context.delete(hunt)
-                        } label: {
-                            Label("Delete", systemImage: "trash")
-                        }
-                        if hunt.isPlayable {
-                            Button {
-                                RaceSession.shared.end()
-                                hostingContext = HostingContext(hunt: hunt)
-                            } label: {
-                                Label("Host race", systemImage: "figure.2.arms.open")
-                            }
-                            .tint(.indigo)
-                            ShareLink(
-                                item: HuntPackage(hunt: hunt),
-                                preview: SharePreview(hunt.title, image: Image(systemName: "flag.fill"))
-                            ) {
-                                Label("Share", systemImage: "square.and.arrow.up")
-                            }
-                            .tint(.blue)
-                        }
-                    }
-                    .contextMenu {
-                        if hunt.isPlayable {
-                            Button {
-                                RaceSession.shared.end()
-                                hostingContext = HostingContext(hunt: hunt)
-                            } label: {
-                                Label("Host race", systemImage: "figure.2.arms.open")
-                            }
-                            ShareLink(
-                                item: HuntPackage(hunt: hunt),
-                                preview: SharePreview(hunt.title, image: Image(systemName: "flag.fill"))
-                            ) {
-                                Label("Share", systemImage: "square.and.arrow.up")
-                            }
-                        }
-                        Button {
-                            path.append(hunt)
-                        } label: {
-                            Label("Edit", systemImage: "pencil")
-                        }
-                        Button(role: .destructive) {
-                            context.delete(hunt)
-                        } label: {
-                            Label("Delete", systemImage: "trash")
-                        }
-                    }
-                }
+        TabView(selection: $selection) {
+            Tab("Join", systemImage: "qrcode.viewfinder", value: AppTab.join) {
+                JoinTab(linkCode: $linkCode, onStart: launch)
             }
-            .navigationTitle("Quarry")
-            .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
-                    Button("Join", systemImage: "person.2.badge.plus") {
-                        joinContext = JoinContext(initialCode: nil)
-                    }
-                    .accessibilityLabel("Join race")
-                }
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button("New hunt", systemImage: "plus") {
-                        let hunt = Hunt(title: "New Hunt")
-                        hunt.hostName = PlayerIdentity.name
-                        context.insert(hunt)
-                        path.append(hunt)
-                    }
-                }
+            Tab("Host", systemImage: "dot.radiowaves.left.and.right", value: AppTab.host) {
+                HostTab(onStart: launch, onCreateHunt: { selection = .create })
             }
-            .navigationDestination(for: Hunt.self) { hunt in
-                HuntEditorView(hunt: hunt, path: $path)
+            Tab("Create", systemImage: "plus.square.on.square", value: AppTab.create) {
+                CreateTab(onPlay: { hunt in launch(hunt, nil) })
             }
-            .navigationDestination(for: Checkpoint.self) { cp in
-                CheckpointEditorView(checkpoint: cp)
+        }
+        .fullScreenCover(item: $game) { launch in
+            PlayView(session: launch.session, startAt: launch.startAt) {
+                finish(launch)
             }
-            // Solo / post-race session presents PlayView (startAt nil = already started).
-            // Race host/join session passes pendingStartAt for the countdown.
-            .fullScreenCover(item: $session) { s in
-                PlayView(session: s, startAt: pendingStartAt) {
-                    session = nil
-                    pendingStartAt = nil
-                }
+        }
+        // AirDrop / Messages: a .quarryhunt file was opened
+        .sheet(item: $incomingPackage) { incoming in
+            ImportHuntSheet(package: incoming.package) {
+                incomingPackage = nil
+                selection = .join
+            } onCancel: {
+                incomingPackage = nil
             }
-            .alert("Finish setting up this hunt",
-                   isPresented: Binding(get: { pendingSetupHunt != nil },
-                                        set: { if !$0 { pendingSetupHunt = nil } }),
-                   presenting: pendingSetupHunt) { hunt in
-                Button("Edit") { path.append(hunt) }
-                Button("Cancel", role: .cancel) {}
+        }
+        .onOpenURL { url in
+            if let code = RoomCode.code(from: url) {
+                selection = .join
+                linkCode = code
+            } else if url.isFileURL, let pkg = try? HuntPackage.load(from: url) {
+                incomingPackage = IncomingPackage(package: pkg)
             }
-            // AirDrop / file-share import sheet
-            .sheet(item: $incomingPackage) { incoming in
-                ImportHuntSheet(package: incoming.package) {
-                    incomingPackage = nil
-                } onCancel: {
-                    incomingPackage = nil
-                }
-            }
-            // Host lobby: show QR + room code, "Start for everyone"
-            .sheet(item: $hostingContext) { hosting in
-                HostLobbyView(hunt: hosting.hunt, package: HuntPackage(hunt: hosting.hunt)) { date in
-                    let count = hosting.hunt.orderedCheckpoints.count
-                    RaceSession.shared.begin(
-                        huntShareID: hosting.hunt.shareID,
-                        total: count,
-                        isHost: true,
-                        startAt: date
-                    )
-                    hostingContext = nil
-                    // PlayView will call session.start() after the countdown.
-                    let s = HuntSession(hunt: hosting.hunt)
-                    pendingStartAt = date
-                    session = s
-                }
-            }
-            // Join lobby: enter code, receive hunt, wait for host to start
-            .sheet(item: $joinContext) { jc in
-                JoinView(initialCode: jc.initialCode) { package in
-                    // Hunt received from the host: import it and wait for the start signal.
-                    let hunt = package.importHunt(into: context)
-                    pendingJoinInfo = (hunt, package)
-                }
-            }
-            // When the host fires the start signal, NearbySession.startAt becomes non-nil.
-            .onChange(of: NearbySession.shared.startAt) { _, newStartAt in
-                guard let newStartAt, let info = pendingJoinInfo else { return }
-                RaceSession.shared.begin(
-                    huntShareID: info.package.shareID,
-                    total: info.package.checkpoints.count,
-                    isHost: false,
-                    startAt: newStartAt
-                )
-                joinContext = nil          // dismiss JoinView
-                let s = HuntSession(hunt: info.hunt)
-                pendingStartAt = newStartAt
-                session = s               // present PlayView with countdown
-                pendingJoinInfo = nil
-            }
-            .onOpenURL { url in
-                // Deep link: quarry://join?code=ABCD  (iPhone Camera app scans the QR)
-                if let code = RoomCode.code(from: url) {
-                    joinContext = JoinContext(initialCode: code)
-                // Deep link: incoming .quarryhunt file via AirDrop / Messages
-                } else if url.isFileURL, let pkg = try? HuntPackage.load(from: url) {
-                    incomingPackage = IncomingPackage(package: pkg)
-                }
-            }
+            // quarry://camera is handled by PlayView while a game is running.
         }
         .onAppear { DemoData.seedIfEmpty(context) }
         .task { await LiveActivityManager.shared.endAllStale() }
     }
 
-    @ViewBuilder
-    private func thumbnail(for data: Data?) -> some View {
-        if let data, let image = UIImage(data: data) {
-            Image(uiImage: image)
-                .resizable()
-                .scaledToFill()
-                .frame(width: 44, height: 44)
-                .clipShape(RoundedRectangle(cornerRadius: 8))
-        } else {
-            Image(systemName: "photo")
-                .foregroundStyle(.secondary)
-                .frame(width: 44, height: 44)
-                .background(.quaternary, in: RoundedRectangle(cornerRadius: 8))
+    // MARK: - Game launcher
+
+    /// Starts a game. `startAt` = synced start time (shows a 3-2-1 countdown); nil = start now.
+    private func launch(_ hunt: Hunt, _ startAt: Date?) {
+        let session = HuntSession(hunt: hunt)
+        if startAt == nil { session.start() }   // PlayView starts it after the countdown otherwise
+        game = GameLaunch(session: session, startAt: startAt)
+    }
+
+    /// Records the result (for "Your games") and tears down any nearby connection.
+    private func finish(_ launch: GameLaunch) {
+        let session = launch.session
+        if session.isFinished {
+            let hunt = session.hunt
+            hunt.lastPlayedAt = .now
+            let time = session.totalTime
+            hunt.bestTime = min(hunt.bestTime ?? .infinity, time)
         }
+        NearbySession.shared.stop()
+        game = nil
     }
 }
 
-// MARK: - Private context types
-
-private struct HostingContext: Identifiable {
+/// A game being played (identifiable so it can drive .fullScreenCover(item:)).
+struct GameLaunch: Identifiable {
     let id = UUID()
-    let hunt: Hunt
+    let session: HuntSession
+    let startAt: Date?
 }
 
-private struct JoinContext: Identifiable {
-    let id = UUID()
-    let initialCode: String?
+/// Small helpers shared by the tabs.
+@ViewBuilder
+func huntThumbnail(_ data: Data?, size: CGFloat = 44) -> some View {
+    if let data, let image = UIImage(data: data) {
+        Image(uiImage: image)
+            .resizable()
+            .scaledToFill()
+            .frame(width: size, height: size)
+            .clipShape(RoundedRectangle(cornerRadius: size * 0.2))
+    } else {
+        Image(systemName: "flag.fill")
+            .foregroundStyle(.indigo)
+            .frame(width: size, height: size)
+            .background(.indigo.opacity(0.12), in: RoundedRectangle(cornerRadius: size * 0.2))
+    }
 }
 
 private struct IncomingPackage: Identifiable {
@@ -272,7 +141,9 @@ private struct ImportHuntSheet: View {
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Join") {
-                        package.importHunt(into: context)
+                        let hunt = package.importHunt(into: context)
+                        hunt.isJoined = true
+                        try? context.save()
                         onImported()
                     }
                 }

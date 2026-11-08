@@ -46,7 +46,11 @@ struct PlayView: View {
         .sensoryFeedback(.success, trigger: session.lastClearedNumber)
         .fullScreenCover(item: $cameraCheckpoint) { cp in
             VerifyCameraView(checkpoint: cp) {
-                cameraCheckpoint = nil
+                // Close the camera instantly (no slide-away animation) so the
+                // "Next clue" button on the cleared screen responds right away.
+                var transaction = Transaction()
+                transaction.disablesAnimations = true
+                withTransaction(transaction) { cameraCheckpoint = nil }
                 session.clearCurrent()
             }
         }
