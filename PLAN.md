@@ -39,11 +39,7 @@ Read `SPEC.md` (what we're building) and `MAP.md` (where the code is) first. Thi
 3. **Build.** Pick your iPhone (or a simulator) at the top of Xcode → ⌘R. You should see "Quarry" with a "Birthday Hunt" row. Tap it, then "Open camera," then "Pretend cleared." The whole flow works as a stub.
 4. **Your branch.** GitHub Desktop → Branch → New Branch: `vision` (A), `hunt` (B), `live-activity` (C).
 5. **Agent.** Xcode → Settings → Intelligence → pick Claude Agent or Codex (USC students get Codex free) → sign in.
-6. **SwiftUI skill** (optional, 2 min, makes the agent better at SwiftUI). In Terminal:
-   ```bash
-   cd ~/path/to/Quarry
-   npx skills add https://github.com/twostraws/swiftui-agent-skill --skill swiftui-pro
-   ```
+6. **SwiftUI Pro skill** is already in the repo (`.agents/skills/swiftui-pro`, plus `.claude/skills/swiftui-pro` for Claude). Nothing to install. To use it, tell your agent: "Use the SwiftUI Pro skill" (or `/swiftui-pro` in Claude, `$swiftui-pro` in Codex).
 7. **First message to your agent** (paste once at the start of each new conversation):
    > Read AGENTS.md, SPEC.md and MAP.md in the repo root. I am Person [A/B/C]. Summarize in 3 bullets what I own, which files I'm allowed to edit, and the contracts I must keep. Don't change any code yet.
 
