@@ -3,13 +3,19 @@
 //
 import AVFoundation
 import Foundation
+import CoreImage
+import UIKit
 
 // All mutable capture state is confined to queue. The session is exposed only
 // so the main-thread preview layer can display it, never to configure it.
-nonisolated final class CameraSession: @unchecked Sendable {
+nonisolated final class CameraSession: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate, @unchecked Sendable {
     let session = AVCaptureSession()
     private let queue = DispatchQueue(label: "Quarry.camera")
     private let photoOutput = AVCapturePhotoOutput()
+    private let videoOutput = AVCaptureVideoDataOutput()
+    private let imageContext = CIContext()
+    private var latestFrame: CVPixelBuffer?
+    private var latestFrameTime = ContinuousClock.now
     private var configured = false
     private var captureDelegate: PhotoDelegate?
 
@@ -55,13 +61,63 @@ nonisolated final class CameraSession: @unchecked Sendable {
             throw CameraError.unavailable
         }
         session.addOutput(photoOutput)
+        guard session.canAddOutput(videoOutput) else {
+            session.removeOutput(photoOutput)
+            session.removeInput(input)
+            throw CameraError.unavailable
+        }
+        videoOutput.alwaysDiscardsLateVideoFrames = true
+        videoOutput.setSampleBufferDelegate(self, queue: queue)
+        session.addOutput(videoOutput)
+        // Keep buffers in sensor orientation; apply the capture angle to UIImage.
+        videoOutput.connection(with: .video)?.videoRotationAngle = 0
         configured = true
     }
 
     func stop() {
         queue.async {
+            self.latestFrame = nil
             if self.session.isRunning {
                 self.session.stopRunning()
+            }
+        }
+    }
+
+    func captureOutput(_ output: AVCaptureOutput, didOutput sampleBuffer: CMSampleBuffer, from connection: AVCaptureConnection) {
+        latestFrame = CMSampleBufferGetImageBuffer(sampleBuffer)
+        latestFrameTime = .now
+    }
+
+    // Both live and still comparisons run on the same serial queue, never concurrently.
+    func matchScore(references: [Data], rotationAngle: CGFloat, photo: Data? = nil) async throws -> Double? {
+        try await withCheckedThrowingContinuation { continuation in
+            queue.async {
+                do {
+                    let score: Double? = try autoreleasepool {
+                        guard !references.isEmpty else { return nil }
+                        let image: UIImage
+                        if let photo {
+                            guard let decoded = UIImage(data: photo) else { throw CameraError.captureFailed }
+                            image = decoded
+                        } else {
+                            guard self.session.isRunning, !self.session.isInterrupted,
+                                  let buffer = self.latestFrame,
+                                  self.latestFrameTime.duration(to: .now) < .milliseconds(400) else { return nil }
+                            self.latestFrame = nil
+                            let ciImage = CIImage(cvPixelBuffer: buffer)
+                            guard let cgImage = self.imageContext.createCGImage(ciImage, from: ciImage.extent) else {
+                                throw CameraError.captureFailed
+                            }
+                            let orientations: [UIImage.Orientation] = [.up, .right, .down, .left]
+                            let quadrant = (Int((rotationAngle / 90).rounded()) % 4 + 4) % 4
+                            image = UIImage(cgImage: cgImage, scale: 1, orientation: orientations[quadrant])
+                        }
+                        return VisionMatcher.score(forDistance: try VisionMatcher.bestDistance(from: image, to: references))
+                    }
+                    continuation.resume(returning: score)
+                } catch {
+                    continuation.resume(throwing: error)
+                }
             }
         }
     }
