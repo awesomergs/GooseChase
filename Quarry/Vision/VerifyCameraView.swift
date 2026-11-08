@@ -11,10 +11,10 @@ struct VerifyCameraView: View {
     var body: some View {
         CameraCaptureView(
             title: checkpoint.clue,
-            message: "Take a photo to check the camera. Checkpoint verification is not available yet."
+            message: "Frame the object and hold steady.",
+            referencePrints: checkpoint.referencePrints
         ) { _ in
-            // A photo alone is not proof of a match. Only successful Vision
-            // verification may call onCleared in the next milestone.
+            onCleared()
         }
     }
 }
