@@ -2,19 +2,19 @@
 
 **iOSC Fall 2026 Hackathon · Sunday Nov 8 · team of 3 · hacking 10:30am → submit 6:30pm → pitch 7:00pm**
 
-> If you are a coding agent: read this whole file before changing code. The "Rules for agents" section is binding.
+> If you are a coding agent: read this whole file and `MAP.md` before changing code. The "Rules for agents" section is binding.
 
 ---
 
 ## 1. The pitch in one breath
 
-**Quarry is a scavenger hunt app where the phone is the referee.** A host snaps a couple of photos of hidden things to make a hunt. Players get clues, and a checkpoint only clears when the camera actually sees the right thing. On-device Vision does the checking, instantly and offline. The hunt's progress and timer live in the Dynamic Island, on the Lock Screen and on the Apple Watch.
+**Quarry is a scavenger hunt app where the phone is the referee.** A host snaps a couple of photos of hidden things to make a hunt, then shows a QR code; friends scan it to join, phone-to-phone, and everyone starts together. A checkpoint only clears when the camera actually sees the right thing, and a live leaderboard shows who's winning. On-device Vision does the checking, instantly and offline. The hunt's progress and timer live in the Dynamic Island, on the Lock Screen and on the Apple Watch.
 
-**Who it's for:** a parent running an indoor scavenger hunt at a kid's birthday party, who's tired of refereeing "did you *really* find it?" One phone, no accounts, no internet.
+**Who it's for:** a club officer running an orientation scavenger hunt. Today 40 freshmen send photos to a group chat and the officer spends an hour checking them. With Quarry, every photo is verified on-device and the leaderboard updates live. No accounts, no internet.
 
-**One-sentence flow:** pick a hunt → read the clue → find the thing → point the camera → the ring fills → cleared → next clue.
+**One-sentence flow:** host shows a QR → friends scan to join → "Start for everyone" → read the clue → point the camera → the ring fills → cleared → the leaderboard updates.
 
-**The moment judges remember:** the confidence ring around the shutter fills as you aim at the right object, then auto-captures with a success haptic, and the Dynamic Island pops open saying "Checkpoint cleared!"
+**The moment judges remember:** the confidence ring around the shutter fills as you aim at the right object, then auto-captures with a success haptic. Lock the phone and the hunt is still there on the Lock Screen and in the Dynamic Island, one tap from the camera.
 
 ---
 
@@ -23,10 +23,10 @@
 - ~8 hours of building. **A small app that fully works beats a big one that half works.** Judges score what it does today.
 - Swift/SwiftUI, runs on a real iPhone. **App icon must be made in Icon Composer (no AI-generated icon; it costs points).**
 - Pitch = Keynote (~4 slides) + live demo, 3 minutes total: Problem 0:30 · Live demo 1:30 · Why Apple 0:45 · Next 0:15.
-- **No server, no accounts, no social/multiplayer.** Local storage only (SwiftData).
+- **No server, no accounts.** Local storage only (SwiftData). Multiplayer is **peer-to-peer only** (MultipeerConnectivity, same room) plus AirDrop/Messages file sharing.
 - **Free "Personal Team" signing.** No push notifications, no CloudKit, no WeatherKit, no paid capabilities.
 - Judging includes **Platform Integration** (why this must be a native app) and **Design** (looks and behaves like Apple's own apps).
-- **We're in a basement.** GPS is unreliable, so nothing in the core flow depends on location.
+- **We're in a basement.** GPS is unreliable indoors, so location is **optional per checkpoint** and never blocks the core camera flow in the demo. Demo Mode skips location checks; launching from Xcode can simulate a location (Debug → Simulate Location).
 
 ---
 
@@ -36,19 +36,25 @@
 1. A seeded demo hunt plus the ability to **create a hunt**: add checkpoints with a clue and 2–3 reference photos.
 2. **Play a hunt:** clue screen → camera → Vision verifies → cleared screen → next clue → finish screen with total time.
 3. **Exact-match verification:** compare camera frames to the reference photos' feature prints, with a live confidence ring and auto-capture.
-4. **Live Activity:** Lock Screen + Dynamic Island (compact, minimal, expanded) showing checkpoint X of Y, the clue and an elapsed timer; it pops open on clear.
+4. **Live Activity:** Lock Screen + Dynamic Island (compact, minimal, expanded) showing checkpoint X of Y, the clue and an elapsed timer; tapping it (or "Open camera" in the expanded island) jumps straight to the camera. It ends 3 minutes after the hunt finishes.
 5. **Apple Watch:** the same Live Activity in the Smart Stack (free via `.supplementalActivityFamilies([.small])`; no Watch app target).
 6. **Haptics** on progress, success and error.
 7. App icon (Icon Composer), polished with system components and Liquid Glass.
+8. **Join a hunt:** the host taps **Host race** → a QR code + 4-letter room code; players scan (in-app, or with the iPhone Camera app via `quarry://join?code=…`) or type the code → the hunt transfers phone-to-phone over MultipeerConnectivity → **"Start for everyone"** starts all phones together after a 3-second countdown.
+8b. **Share a hunt as a file** (fallback): ShareLink → AirDrop/Messages → recipient taps the `.quarryhunt` file → "Join <title>?" → imported.
+8c. **Live leaderboard:** each clear sends progress to the host, who broadcasts standings to everyone; shown in a sheet during play and on the finish screen.
+9. **Guard rails:** a hunt can't start unless every checkpoint is ready (has a reference photo, or a label for object checkpoints); empty hunts can't start.
 
 ### Stretch (only after the MVP works on the phone, in this order)
-1. **Object checkpoints:** "find any bicycle" using Vision image classification.
-2. **Hints** that add a time penalty.
-3. An **App Intent** button inside the Live Activity ("Open camera").
-4. A **"Make it a riddle" button** that rewrites the clue with Foundation Models (needs iPhone 15 Pro or newer).
+1. **Location (optional per checkpoint):** map pin + radius in the editor, **hot/cold** on the clue screen, optional **"Must be here"** gate; **Demo Mode** skips the gate. (Contract below.)
+2. **Rank in the Live Activity** ("2nd of 4").
+3. **Object checkpoints:** "find any bicycle" using Vision image classification.
+4. **Hints** that add a time penalty.
+5. **App Intents:** "Hey Siri, I found it!" / Action button → opens the camera on the current clue; "What's my clue?" → Siri reads it aloud.
+6. A **"Make it a riddle" button** that rewrites the clue with Foundation Models (needs iPhone 15 Pro or newer).
 
 ### Explicitly out of scope (do not build)
-Live races, leaderboards, accounts or login, CloudKit or any backend, a Watch app target, Home Screen widgets, onboarding, a settings screen, location-gated checkpoints, push notifications.
+Accounts or login, CloudKit or any backend, joining from outside the room, a Watch app target, Home Screen widgets, onboarding, a settings screen, push notifications, live multiplayer location sharing.
 
 ---
 
@@ -60,40 +66,22 @@ All screens use stock SwiftUI (`NavigationStack`, `List`, `.toolbar`, `.sheet`, 
 |---|---|---|---|
 | 1 | Hunt list (root) | B | `List` of hunts (title, checkpoint count, thumbnail), "+" toolbar button → Create |
 | 2 | Create / edit hunt | B | Title field, list of checkpoints (reorderable), "Add checkpoint" |
-| 3 | Checkpoint editor | B (+A's capture) | Clue text, take 2–3 reference photos, **Test match** button showing the live score, Save |
-| 4 | Play: clue | B | "Checkpoint 2 of 5", segmented progress, big clue text, elapsed timer, primary **Open camera** button |
+| 3 | Checkpoint editor | B (+A's components) | Clue text, take 2–3 reference photos, **Test match** button, optional **Location** section (A's `LocationPickerView`: map pin, radius, "Use my location", "Must be here" toggle) |
+| 4 | Play: clue | B (+A's component) | "Checkpoint 2 of 5", segmented progress, big clue text, elapsed timer, A's `HotColdView` when the checkpoint has a location, primary **Open camera** button |
 | 5 | Camera verify | **A** | Full-screen camera, target chip, **confidence ring around the shutter**, match % text, tip text, auto-capture at threshold |
 | 6 | Cleared | B | Captured photo, split time, match %, **Next clue** button, success haptic |
 | 7 | Finished | B | Total time, captured photos grid, Done |
 | 8 | Live Activity | **C** | Lock Screen, Dynamic Island compact/minimal/expanded, Watch Smart Stack |
 
-The visual mock-ups are on the team design canvas (Quarry iOS Mock-ups). The race, leaderboard and map screens on it are out of scope.
+The visual mock-ups are on the team design canvas (Quarry iOS Mock-ups). The race and leaderboard screens on it are out of scope.
 
 ---
 
-## 5. Code map (what exists right now)
+## 5. Code map
 
-```
-Quarry/
-├── QuarryApp.swift              App entry, SwiftData container [Hunt, Checkpoint]
-├── ContentView.swift            (B) Temporary root: hunt list + PlayView. Replace freely.
-├── Shared/                      CONTRACT: change only after telling the team
-│   ├── Models.swift             Hunt, Checkpoint, CheckpointKind (SwiftData @Model)
-│   └── HuntActivityAttributes.swift   Live Activity data (compiled into app AND widget extension)
-├── Hunt/                        (B)
-│   ├── HuntSession.swift        @Observable: current checkpoint, start/clearCurrent/quit → drives Live Activity
-│   └── DemoData.swift           Seeds a 3-checkpoint "Birthday Hunt" if the store is empty
-├── Vision/                      (A)
-│   ├── VisionMatcher.swift      makeReferencePrint(from:), bestDistance(from:to:), score(forDistance:)
-│   └── VerifyCameraView.swift   STUB with a "Pretend cleared" button. A replaces the body.
-└── LiveActivity/                (C)
-    └── LiveActivityManager.swift   start / cleared / advance / end / endAllStale
-QuarryWidgets/                   (C) Widget extension target "QuarryWidgetsExtension"
-├── QuarryWidgetsBundle.swift    Bundle body = HuntLiveActivity() only
-└── QuarryWidgetsLiveActivity.swift   Lock Screen, Dynamic Island, Watch (.small) layouts + previews
-```
-
-`Item.swift`, `QuarryWidgets.swift` and `QuarryWidgetsControl.swift` are empty placeholders and can be deleted.
+See **`MAP.md`** for every file, what it contains, who owns it, and how data flows between them.
+Short version: `Quarry/Shared/` = contract, `Quarry/Vision/` = A, `Quarry/Hunt/` + `ContentView.swift` = B,
+`Quarry/LiveActivity/` + `QuarryWidgets/` = C.
 
 ---
 
@@ -106,8 +94,11 @@ enum CheckpointKind: String, Codable { case exactMatch, object }
 @Model final class Hunt {
     var title: String
     var createdAt: Date
+    var shareID: UUID                      // stable across phones; imports dedupe on it; identifies a race
+    var hostName: String                   // who made it
     var checkpoints: [Checkpoint]          // cascade delete
     var orderedCheckpoints: [Checkpoint]   // sorted by order
+    var isPlayable: Bool                   // has checkpoints AND every checkpoint isReady
 }
 
 @Model final class Checkpoint {
@@ -118,6 +109,12 @@ enum CheckpointKind: String, Codable { case exactMatch, object }
     var thumbnail: Data?                   // small JPEG of the first reference photo
     var targetLabel: String?               // for .object, e.g. "bicycle"
     var hunt: Hunt?
+    // Location (optional)
+    var latitude: Double?, longitude: Double?
+    var coordinate: CLLocationCoordinate2D?   // computed get/set over latitude/longitude
+    var radiusMeters: Double               // default 40
+    var requiresLocation: Bool             // default false: "Must be here"
+    var isReady: Bool                      // exactMatch: has a reference print; object: has a label
 }
 ```
 
@@ -135,10 +132,78 @@ VisionMatcher.bestDistance(from: UIImage, to: [Data]) throws -> Float   // small
 VisionMatcher.score(forDistance: Float) -> Double                       // 0...1 for the ring
 ```
 
+### Sharing (Shared/HuntPackage.swift, C · conversions by B)
+```swift
+struct HuntPackage: Codable, Sendable, Transferable { shareID, title, hostName, checkpoints: [CheckpointPackage] }
+struct CheckpointPackage: Codable, Sendable { order, clue, kindRaw, referencePrints, thumbnail, targetLabel, latitude, longitude, radiusMeters, requiresLocation }
+UTType.quarryHunt                                   // "com.quarryapp.hunt", .quarryhunt (declared in Quarry/Info.plist)
+HuntPackage.load(from: URL) throws -> HuntPackage   // decode a received file
+// B, in Quarry/Hunt/HuntPackage+SwiftData.swift:
+extension HuntPackage { init(hunt: Hunt); @discardableResult func importHunt(into: ModelContext) -> Hunt }  // dedupes by shareID
+```
+
+### Race messages (Shared/RaceMessages.swift, C)
+```swift
+struct PlayerProgress: Codable, Identifiable { id, name, cleared, total, finishedAt: Date?, updatedAt }
+enum NearbyMessage: Codable { hello(player:), hunt(HuntPackage), start(at: Date), progress(PlayerProgress), leaderboard([PlayerProgress]) }
+enum RoomCode { make() -> String; joinURL(_:) -> URL /* quarry://join?code=KQ7X */; code(from: URL) -> String? }
+enum PlayerIdentity { static var id: String; static var name: String }   // persisted in UserDefaults
+```
+
+### Nearby (A provides in `Quarry/Nearby/`)
+```swift
+@Observable @MainActor final class NearbySession {      // NearbySession.shared, serviceType "quarry-hunt"
+    var roomCode: String?, isHosting: Bool, connectedPlayers: [String], status: Status
+    var receivedHunt: HuntPackage?                     // player: set when the host sends the hunt
+    var startAt: Date?                                 // player: set when the host taps Start
+    func startHosting(package: HuntPackage) -> String  // returns the room code; sends .hunt to each peer on connect
+    func join(code: String)                            // player; sends .hello on connect
+    func send(_ message: NearbyMessage)                // host → all; player → host
+    func stop()
+}   // forwards .hello / .progress / .leaderboard to RaceSession.shared.receive(_:)
+    // and on init sets: RaceSession.shared.sendHandler = { [weak self] in self?.send($0) }
+struct QRCodeView: View { init(url: URL) }
+struct HostLobbyView: View { init(hunt: Hunt, package: HuntPackage, onStart: (Date) -> Void) }   // QR, code, players, "Start for everyone"
+struct JoinView: View { init(initialCode: String?, onJoined: (HuntPackage) -> Void) }          // name, code field, QR scanner, waiting state
+```
+
+### Race (C provides in `Quarry/Race/`)
+```swift
+@Observable @MainActor final class RaceSession {        // RaceSession.shared  (BUILT)
+    var isActive: Bool, isHost: Bool, huntShareID: UUID?, startDate: Date?
+    var players: [PlayerProgress]                      // sorted standings
+    var me: PlayerProgress?, myRank: Int?, racerCount: Int, myID: String
+    var sendHandler: ((NearbyMessage) -> Void)?        // A's NearbySession sets this; nil = solo play
+    func begin(huntShareID: UUID, total: Int, isHost: Bool, startAt: Date = .now)   // keeps lobby hellos
+    func reportProgress(cleared: Int, total: Int)      // B's HuntSession calls after each clear
+    func receive(_ message: NearbyMessage)             // A's NearbySession forwards race messages
+    func rank(of id: String) -> Int?
+    func finishTime(of: PlayerProgress) -> TimeInterval?
+    func end()                                         // also call before hosting a new race
+}
+struct LeaderboardView: View { init(race: RaceSession = .shared) }   // (BUILT)
+```
+
+### Location (stretch · A provides in `Quarry/Location/`, B embeds)
+```swift
+@Observable final class LocationService {          // LocationService.shared
+    var location: CLLocation?                       // latest fix, nil until authorized
+    var demoMode: Bool                              // persisted; skips "Must be here" gates
+    func start()                                    // asks When-In-Use permission, starts live updates
+    func stop()
+    func distance(to: Checkpoint) -> CLLocationDistance?   // nil if no fix or no coordinate
+    func isHere(at: Checkpoint) -> Bool                     // true if no requirement, demoMode, or inside radius
+}
+enum Warmth { case freezing, cold, warm, hot, onFire }  // from distance vs radius; has .label and .color
+struct LocationPickerView: View { init(checkpoint: Checkpoint) }   // map pin + radius + "Use my location" + "Must be here"
+struct HotColdView: View { init(checkpoint: Checkpoint) }          // distance, direction arrow, warmth band
+```
+`VerifyCameraView` (A) checks `LocationService.shared.isHere(at:)` before allowing a clear and shows "Get closer: 120 m away" if not.
+
 ### Live Activity (C provides, B's HuntSession calls)
 ```swift
 LiveActivityManager.shared.start(huntTitle:totalCheckpoints:firstClue:)
-await LiveActivityManager.shared.cleared(index:clue:)    // pops the island open with an alert
+await LiveActivityManager.shared.cleared(index:clue:)    // green "Checkpoint N cleared!" state for ~3 s
 await LiveActivityManager.shared.advance(to:clue:)
 await LiveActivityManager.shared.end(finalMessage:)
 await LiveActivityManager.shared.endAllStale()           // on launch, clears leftovers
@@ -149,55 +214,13 @@ await LiveActivityManager.shared.endAllStale()           // on launch, clears le
 
 ## 7. Work split and acceptance criteria
 
-### Person A: Camera + Vision (`Quarry/Vision/`)
-Build the real `VerifyCameraView`:
-- [ ] AVFoundation camera preview, full screen, back camera.
-- [ ] Sample frames about 5 times a second (not every frame); compute `bestDistance` → `score` off the main thread.
-- [ ] Confidence ring around the shutter button that animates to the current score. Color: neutral → yellow (≥50%) → green (≥ threshold).
-- [ ] Auto-capture when the score stays ≥ the threshold for ~0.5 s. Success haptic (`.sensoryFeedback(.success, …)`), then `onCleared()`.
-- [ ] Manual shutter as a fallback: if the score is below the threshold, show "Not quite. Try another angle" with an error haptic.
-- [ ] "Match 72%" label plus a one-line tip.
-- [ ] **Tune thresholds** in `VisionMatcher.score` by testing 5+ real objects in the room (same object should pass; similar-looking wrong objects should fail). Write the chosen numbers in a comment.
-- [ ] Provide a small reusable camera-capture view for B's checkpoint editor (take a still photo → `UIImage`).
-- Stretch: `.object` checkpoints with `VNClassifyImageRequest` (pass when `targetLabel` confidence ≥ 0.3).
-
-Done when: on the phone, pointing at the reference object fills the ring and clears within ~2 s, and pointing at a different object does not.
-
-### Person B: Hunt flow + data (`Quarry/Hunt/`, `ContentView.swift`)
-- [ ] Hunt list with thumbnails; swipe to delete.
-- [ ] Create hunt → checkpoint editor: clue field, capture 2–3 reference photos (A's capture view, or `PhotosPicker` as a temporary stand-in), store prints via `makeReferencePrint`, store a downsized JPEG thumbnail.
-- [ ] **Test match** button in the editor: opens `VerifyCameraView` for that checkpoint so the host can confirm it works.
-- [ ] Play flow polish: progress segments, elapsed timer, cleared screen with split time, finished screen with total time.
-- [ ] Haptics on navigation milestones (`.sensoryFeedback`).
-- [ ] Keep `HuntSession` as the single place that calls `LiveActivityManager`.
-
-Done when: you can create a 3-checkpoint hunt from scratch on the phone and play it start to finish.
-
-### Person C (Rohan): Platform + pitch (`Quarry/LiveActivity/`, `QuarryWidgets/`)
-- [ ] Live Activity verified on a real phone: compact, minimal, expanded, Lock Screen; alert pop on clear.
-- [ ] Watch Smart Stack layout verified (if someone has an Apple Watch on watchOS 11+).
-- [ ] Polish the island: SF Symbols, indigo keyline, readable timer width.
-- [ ] Owns all project settings, targets and capabilities (`project.pbxproj`).
-- [ ] App icon in Icon Composer (20 min budget): a simple SF Symbol (`viewfinder` or `scope`) on an indigo gradient.
-- [ ] Keynote deck (4 slides) + demo script rehearsal by 6:30.
-- Stretch: App Intent "Open camera" button in the expanded island.
-
-Done when: starting the demo hunt shows the island within 1 s; clearing a checkpoint pops it open with "Checkpoint cleared!"
+See **`PLAN.md`**: it holds the current per-person tasks, acceptance checks, agent prompts and timeline. It's updated as the day goes; this file holds what doesn't change (scope, contracts, conventions).
 
 ---
 
 ## 8. Timeline
 
-| Time | Milestone (guidebook checkpoint) |
-|---|---|
-| 11:00 | Idea locked, skeleton builds on every laptop, runs on one iPhone |
-| 1:00 | **Merge 1.** Core flow works on the phone: real camera replaces the stub; Live Activity starts and ends |
-| 4:00 | **Merge 2.** Create flow works; ring + auto-capture tuned; island polished; icon done |
-| 5:30 | **Feature freeze.** Bug fixes only. C builds the Keynote; A and B rehearse the demo |
-| 6:30 | Submit GitHub repo + Keynote on Devpost |
-| 7:00 | Pitch |
-
-**If behind, cut in this order:** Object checkpoints → App Intent button → hints → create flow (hard-code the demo hunt and take reference photos in the room). **Never cut** the camera ring or the Live Activity.
+See **`PLAN.md`**. Fixed points: **4:00 Merge 2 · 5:30 feature freeze · 6:15 submit on Devpost · 6:30 deadline · 7:00 pitch.**
 
 ---
 
@@ -206,7 +229,7 @@ Done when: starting the demo hunt shows the island within 1 s; clearing a checkp
 1. "Here's a hunt I made for my niece's party." Open the hunt and tap **Start**. *The Dynamic Island appears with "1/3" and a ticking timer.*
 2. Read the clue aloud. Lock the phone briefly. *The Lock Screen shows the clue and progress.*
 3. Unlock, tap **Open camera**, and point at a wrong object. *The ring stays low.*
-4. Point at the right object. *The ring fills, auto-captures, buzz, "Cleared!"; the island pops open.*
+4. Point at the right object. *The ring fills, auto-captures, buzz, "Cleared!"* Go Home: *the island now shows 2/3.* Long-press the island → **Open camera** jumps straight back in.
 5. Show the watch: same progress on the wrist.
 6. (If time) Create a new checkpoint live: snap 2 photos of a judge's water bottle, tap **Test match**.
 
@@ -253,3 +276,4 @@ Done when: starting the demo hunt shows the island within 1 s; clearing a checkp
 5. Build after every change and fix all errors before reporting done. Don't claim something works without saying it was built.
 6. Prefer the simplest code that works today. This is an 8-hour hackathon; no abstractions "for later."
 7. When you finish a change, explain it in 2–3 plain sentences so the human can explain it to judges.
+8. **If you add, rename or delete a file, or change a public type or function, update `MAP.md` in the same change.**

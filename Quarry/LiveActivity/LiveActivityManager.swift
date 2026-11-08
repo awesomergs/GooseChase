@@ -8,6 +8,9 @@ import Foundation
 @MainActor
 final class LiveActivityManager {
     static let shared = LiveActivityManager()
+
+    /// How long the finished hunt stays on the Lock Screen / island before iOS removes it.
+    private let finishedLingerTime: TimeInterval = 3 * 60
     private var activity: Activity<HuntActivityAttributes>?
 
     /// Call when the player taps Start.
@@ -35,11 +38,16 @@ final class LiveActivityManager {
         }
     }
 
-    /// Call right after Vision clears a checkpoint. The alert pops the
-    /// Dynamic Island open briefly (and shows a banner on the Lock Screen).
+    /// Call right after Vision clears a checkpoint.
+    /// Note: iOS hides an app's own Live Activity while that app is on screen, and the
+    /// alert only expands the island when the app is in the background. Since clears happen
+    /// in-app, users mostly see the result after leaving the app (green "cleared" state).
     func cleared(index: Int, clue: String) async {
         guard let activity else { return }
-        let state = HuntActivityAttributes.ContentState(checkpointIndex: index, clue: clue, justCleared: true)
+        // The views show `clue` as the status line while justCleared is true.
+        let total = activity.attributes.totalCheckpoints
+        let message = index < total ? "Checkpoint \(index) cleared!" : "Last checkpoint cleared!"
+        let state = HuntActivityAttributes.ContentState(checkpointIndex: index, clue: message, justCleared: true)
         await activity.update(
             .init(state: state, staleDate: nil),
             alertConfiguration: AlertConfiguration(
@@ -65,7 +73,7 @@ final class LiveActivityManager {
             clue: finalMessage,
             justCleared: true
         )
-        await activity.end(.init(state: final, staleDate: nil), dismissalPolicy: .after(.now.addingTimeInterval(60)))
+        await activity.end(.init(state: final, staleDate: nil), dismissalPolicy: .after(.now.addingTimeInterval(finishedLingerTime)))
         self.activity = nil
     }
 

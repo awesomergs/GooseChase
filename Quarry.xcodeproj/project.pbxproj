@@ -58,12 +58,20 @@
 			);
 			target = A0413DD530A0FBFB00047453 /* QuarryWidgetsExtension */;
 		};
+		A0413DF130A0FBFD00047453 /* Exceptions for "Quarry" folder in "Quarry" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = A0413DC130A0F9B600047453 /* Quarry */;
+		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		A0413DC430A0F9B600047453 /* Quarry */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
+				A0413DF130A0FBFD00047453 /* Exceptions for "Quarry" folder in "Quarry" target */,
 				A0413DF030A0FBFD00047453 /* Exceptions for "Quarry" folder in "QuarryWidgetsExtension" target */,
 			);
 			path = Quarry;
@@ -184,7 +192,7 @@
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
 				LastSwiftUpdateCheck = 2600;
-				LastUpgradeCheck = 2600;
+				LastUpgradeCheck = 2710;
 				TargetAttributes = {
 					A0413DC130A0F9B600047453 = {
 						CreatedOnToolsVersion = 26.0.1;
@@ -292,6 +300,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = K5SB687WBG;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
@@ -315,6 +324,7 @@
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 			};
@@ -355,6 +365,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = K5SB687WBG;
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
@@ -371,6 +382,7 @@
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				VALIDATE_PRODUCT = YES;
 			};
@@ -383,9 +395,12 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 2YH978DCS2;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Quarry/Info.plist;
 				INFOPLIST_KEY_NSCameraUsageDescription = "Quarry uses the camera to check that you found the right thing.";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Quarry shows how close you are to each checkpoint.";
 				INFOPLIST_KEY_NSSupportsLiveActivities = YES;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -416,9 +431,12 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 2YH978DCS2;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Quarry/Info.plist;
 				INFOPLIST_KEY_NSCameraUsageDescription = "Quarry uses the camera to check that you found the right thing.";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Quarry shows how close you are to each checkpoint.";
 				INFOPLIST_KEY_NSSupportsLiveActivities = YES;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -449,6 +467,7 @@
 				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 2YH978DCS2;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = QuarryWidgets/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = QuarryWidgets;
@@ -478,6 +497,7 @@
 				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 2YH978DCS2;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = QuarryWidgets/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = QuarryWidgets;
