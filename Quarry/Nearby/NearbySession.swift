@@ -34,14 +34,20 @@ final class NearbySession {
     private(set) var status: Status = .idle
     private(set) var roomCode: String?
     private(set) var isHosting = false
-    /// Host: display names of connected players.
+    /// Host: display names of players connected right now.
     private(set) var connectedPlayers: [String] = []
+    /// Host: everyone who has joined and received the hunt during this hosting session.
+    /// Players disconnect once they have the hunt, so this list is what the lobby shows.
+    private(set) var joinedPlayers: [String] = []
     /// Player: name of the host we're connected to.
     private(set) var hostName: String?
     /// Player: the hunt the host sent us.
     private(set) var receivedHunt: HuntPackage?
     /// Player: when the host said to start (a few seconds in the future).
     private(set) var startAt: Date?
+    /// Recent events, newest last. Shown on the debug screen so you can see what happened
+    /// on a phone that isn't attached to Xcode.
+    private(set) var log: [String] = []
 
     // MARK: Private
     static let serviceType = "quarry-hunt"   // must match NSBonjourServices in Info.plist
@@ -51,6 +57,11 @@ final class NearbySession {
     @ObservationIgnored private var hostedPackage: HuntPackage?
     @ObservationIgnored private var raceStartedAt: Date?
     @ObservationIgnored private var joinTimeout: Task<Void, Never>?
+    /// Automatic retries used for the current join (before the hunt has arrived).
+    @ObservationIgnored private var retryCount = 0
+    private static let maxRetries = 3
+    @ObservationIgnored private var reconnectAttempts = 0
+    @ObservationIgnored private var reconnectTask: Task<Void, Never>?
 
     init() {
         bridge.owner = self
@@ -80,7 +91,7 @@ final class NearbySession {
         roomCode = code
         isHosting = true
         status = .hosting
-        print("📡 Hosting \"\(package.title)\" with code \(code)")
+        note("📡 Hosting \"\(package.title)\" with code \(code)")
         return code
     }
 
@@ -94,7 +105,13 @@ final class NearbySession {
 
     /// Looks for a host advertising `code` and joins it.
     func join(code rawCode: String) {
+        join(code: rawCode, isRetry: false)
+    }
+
+    private func join(code rawCode: String, isRetry: Bool) {
+        let keptRetries = isRetry ? retryCount : 0
         stop()
+        retryCount = keptRetries
         let code = rawCode.trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
         let session = makeSession()
         bridge.targetCode = code
@@ -106,10 +123,10 @@ final class NearbySession {
         self.browser = browser
         roomCode = code
         status = .searching
-        print("🔎 Looking for a host with code \(code)")
+        note("🔎 Looking for a host with code \(code)")
 
         joinTimeout = Task { [weak self] in
-            try? await Task.sleep(for: .seconds(12))
+            try? await Task.sleep(for: .seconds(20))
             guard let self, !Task.isCancelled else { return }
             if self.status == .searching || self.status == .connecting {
                 self.browser?.stopBrowsingForPeers()
@@ -126,7 +143,7 @@ final class NearbySession {
         do {
             try session.send(message.encoded(), toPeers: session.connectedPeers, with: .reliable)
         } catch {
-            print("⚠️ Nearby send failed:", error)
+            note("⚠️ Nearby send failed: \(error.localizedDescription)")
         }
     }
 
@@ -148,20 +165,90 @@ final class NearbySession {
         roomCode = nil
         isHosting = false
         connectedPlayers = []
+        joinedPlayers = []
         hostName = nil
         receivedHunt = nil
         startAt = nil
+        retryCount = 0
+        reconnectAttempts = 0
+        reconnectTask?.cancel()
+        reconnectTask = nil
+    }
+
+    // MARK: - Reconnect (player)
+
+    private func scheduleReconnect(code: String) {
+        guard reconnectAttempts < 5 else {
+            note("⚠️ Gave up reconnecting. You can keep playing; the leaderboard won't update.")
+            return
+        }
+        reconnectAttempts += 1
+        let attempt = reconnectAttempts
+        reconnectTask?.cancel()
+        reconnectTask = Task { [weak self] in
+            try? await Task.sleep(for: .seconds(2))
+            guard let self, !Task.isCancelled, self.status == .disconnected else { return }
+            self.note("🔁 Reconnecting (try \(attempt) of 5)…")
+            // Fresh session + search, keeping receivedHunt / startAt / roomCode.
+            self.browser?.stopBrowsingForPeers()
+            self.bridge.session?.disconnect()
+            let session = self.makeSession()
+            self.bridge.targetCode = code
+            let browser = MCNearbyServiceBrowser(peer: session.myPeerID, serviceType: Self.serviceType)
+            browser.delegate = self.bridge
+            browser.startBrowsingForPeers()
+            self.browser = browser
+            // If this attempt doesn't connect within 15 s, try again.
+            try? await Task.sleep(for: .seconds(15))
+            guard !Task.isCancelled, self.status == .disconnected else { return }
+            self.scheduleReconnect(code: code)
+        }
+    }
+
+    // MARK: - Logging
+
+    fileprivate func note(_ text: String) {
+        print(text)
+        let time = Date.now.formatted(date: .omitted, time: .standard)
+        log.append("\(time)  \(text)")
+        if log.count > 40 { log.removeFirst(log.count - 40) }
+    }
+
+    fileprivate func startFailed(_ what: String, _ error: any Error) {
+        note("⚠️ Couldn't start \(what): \(error.localizedDescription)")
+        if !isHosting {
+            status = .failed("iOS blocked the search for nearby phones. Turn on Settings → Privacy & Security → Local Network → Quarry, then try again.")
+        }
     }
 
     // MARK: - Session setup
 
-    private func makeSession() -> MCSession {
+    /// One MCPeerID per phone (per display name), saved and reused. Apple recommends reusing
+    /// peer IDs: a fresh ID with the same name on every attempt leaves "ghost" peers on the
+    /// other phone, and new connections stall at "connecting".
+    private func currentPeerID() -> MCPeerID {
         var name = PlayerIdentity.name.trimmingCharacters(in: .whitespacesAndNewlines)
         if name.isEmpty { name = "Player" }
-        // MCPeerID display names are limited to 63 bytes.
-        while name.utf8.count > 60 { name.removeLast() }
+        while name.utf8.count > 60 { name.removeLast() }   // MCPeerID limit is 63 bytes
+
+        let defaults = UserDefaults.standard
+        if let data = defaults.data(forKey: "nearbyPeerID"),
+           let saved = try? NSKeyedUnarchiver.unarchivedObject(ofClass: MCPeerID.self, from: data),
+           saved.displayName == name {
+            return saved
+        }
         let peer = MCPeerID(displayName: name)
-        let session = MCSession(peer: peer, securityIdentity: nil, encryptionPreference: .required)
+        if let data = try? NSKeyedArchiver.archivedData(withRootObject: peer, requiringSecureCoding: true) {
+            defaults.set(data, forKey: "nearbyPeerID")
+        }
+        return peer
+    }
+
+    private func makeSession() -> MCSession {
+        let peer = currentPeerID()
+        // .none: .required often connects and then drops a few seconds later (certificate handshake).
+        // Hunts aren't sensitive and this only travels between phones in the same room.
+        let session = MCSession(peer: peer, securityIdentity: nil, encryptionPreference: .none)
         session.delegate = bridge
         bridge.session = session
         return session
@@ -174,7 +261,10 @@ final class NearbySession {
             if !connectedPlayers.contains(peer.displayName) {
                 connectedPlayers.append(peer.displayName)
             }
-            print("✅ \(peer.displayName) joined")
+            if !joinedPlayers.contains(peer.displayName) {
+                joinedPlayers.append(peer.displayName)
+            }
+            note("✅ \(peer.displayName) joined")
             guard let session = bridge.session else { return }
             // Send the hunt (and the start time, if the race already started) to this player only.
             var messages: [NearbyMessage] = []
@@ -182,14 +272,22 @@ final class NearbySession {
             if let raceStartedAt { messages.append(.start(at: raceStartedAt)) }
             for message in messages {
                 do { try session.send(message.encoded(), toPeers: [peer], with: .reliable) }
-                catch { print("⚠️ Sending to \(peer.displayName) failed:", error) }
+                catch { note("⚠️ Sending to \(peer.displayName) failed: \(error.localizedDescription)") }
             }
         } else {
             joinTimeout?.cancel()
-            browser?.stopBrowsingForPeers()
+            reconnectAttempts = 0
+            reconnectTask?.cancel()
+            // Stopping the search right away can drop a connection that's still settling,
+            // so stop it a few seconds later.
+            Task { [weak self] in
+                try? await Task.sleep(for: .seconds(5))
+                guard let self, self.status == .connected else { return }
+                self.browser?.stopBrowsingForPeers()
+            }
             hostName = peer.displayName
             status = .connected
-            print("✅ Connected to host \(peer.displayName)")
+            note("✅ Connected to host \(peer.displayName)")
             send(.hello(player: PlayerProgress(
                 id: PlayerIdentity.id, name: PlayerIdentity.name, cleared: 0,
                 total: receivedHunt?.checkpoints.count ?? 0, finishedAt: nil, updatedAt: .now
@@ -200,11 +298,27 @@ final class NearbySession {
     fileprivate func peerDisconnected(_ peer: MCPeerID) {
         if isHosting {
             connectedPlayers.removeAll { $0 == peer.displayName }
-            print("👋 \(peer.displayName) left")
-        } else if status == .connected {
-            // Keep the hunt and any start time: the player can keep playing offline.
+            note("👋 \(peer.displayName) left")
+        } else if receivedHunt == nil, let code = roomCode, retryCount < Self.maxRetries {
+            // Dropped before the hunt arrived: try again automatically, with a short pause.
+            retryCount += 1
+            let attempt = retryCount
+            note("🔁 Dropped before the hunt arrived, retrying (\(attempt) of \(Self.maxRetries))…")
+            status = .connecting
+            let retryCode = code
+            Task { [weak self] in
+                try? await Task.sleep(for: .seconds(Double(attempt)))
+                self?.join(code: retryCode, isRetry: true)
+            }
+        } else if receivedHunt != nil, let code = roomCode {
+            // Already have the hunt: keep it (and any start time) and quietly reconnect
+            // so the leaderboard keeps working. The player can keep playing meanwhile.
             status = .disconnected
-            print("⚠️ Lost connection to the host")
+            note("⚠️ Lost connection to the host, reconnecting…")
+            scheduleReconnect(code: code)
+        } else if status == .connected || status == .connecting {
+            status = .failed("Lost connection to the host. Tap Join to try again.")
+            note("⚠️ Lost connection to the host")
         }
     }
 
@@ -215,15 +329,15 @@ final class NearbySession {
     fileprivate func received(_ data: Data) {
         let message: NearbyMessage
         do { message = try NearbyMessage.decode(data) }
-        catch { print("⚠️ Couldn't decode nearby message:", error); return }
+        catch { note("⚠️ Couldn't decode a message: \(error.localizedDescription)"); return }
 
         switch message {
         case .hunt(let package):
             receivedHunt = package
-            print("📦 Received hunt \"\(package.title)\" (\(package.checkpoints.count) checkpoints)")
+            note("📦 Received hunt \"\(package.title)\" (\(package.checkpoints.count) checkpoints)")
         case .start(let date):
             startAt = date
-            print("🏁 Race starts at \(date)")
+            note("🏁 Race starts at \(date)")
         case .hello, .progress, .leaderboard:
             RaceSession.shared.receive(message)
         }
@@ -244,6 +358,16 @@ nonisolated final class MultipeerBridge: NSObject, @unchecked Sendable,
 
     // MCSessionDelegate
     func session(_ session: MCSession, peer peerID: MCPeerID, didChange state: MCSessionState) {
+        guard session === self.session else { return }   // ignore callbacks from an old session
+        let name = peerID.displayName
+        let label: String
+        switch state {
+        case .connected: label = "connected"
+        case .connecting: label = "connecting"
+        case .notConnected: label = "not connected"
+        @unknown default: label = "unknown"
+        }
+        Task { @MainActor [weak owner = self.owner] in owner?.note("↔️ \(name): \(label)") }
         Task { @MainActor [weak owner = self.owner] in
             switch state {
             case .connected: owner?.peerConnected(peerID)
@@ -255,7 +379,13 @@ nonisolated final class MultipeerBridge: NSObject, @unchecked Sendable,
     }
 
     func session(_ session: MCSession, didReceive data: Data, fromPeer peerID: MCPeerID) {
+        guard session === self.session else { return }
         Task { @MainActor [weak owner = self.owner] in owner?.received(data) }
+    }
+
+    func session(_ session: MCSession, didReceiveCertificate certificate: [Any]?, fromPeer peerID: MCPeerID,
+                 certificateHandler: @escaping (Bool) -> Void) {
+        certificateHandler(true)   // always accept: no encryption, same-room phones
     }
 
     func session(_ session: MCSession, didReceive stream: InputStream, withName streamName: String, fromPeer peerID: MCPeerID) {}
@@ -266,24 +396,29 @@ nonisolated final class MultipeerBridge: NSObject, @unchecked Sendable,
     func advertiser(_ advertiser: MCNearbyServiceAdvertiser, didReceiveInvitationFromPeer peerID: MCPeerID,
                     withContext context: Data?, invitationHandler: @escaping (Bool, MCSession?) -> Void) {
         // Players only invite the host whose room code they typed or scanned, so accept.
+        let name = peerID.displayName
+        Task { @MainActor [weak owner = self.owner] in owner?.note("📨 \(name) asked to join, accepting") }
         invitationHandler(true, session)
     }
 
     func advertiser(_ advertiser: MCNearbyServiceAdvertiser, didNotStartAdvertisingPeer error: any Error) {
-        print("⚠️ Couldn't start hosting:", error)
+        Task { @MainActor [weak owner = self.owner] in owner?.startFailed("hosting", error) }
     }
 
     // MCNearbyServiceBrowserDelegate (player)
     func browser(_ browser: MCNearbyServiceBrowser, foundPeer peerID: MCPeerID, withDiscoveryInfo info: [String: String]?) {
-        guard let session, let targetCode, info?["code"]?.uppercased() == targetCode else { return }
-        print("🔗 Found host \(peerID.displayName) for code \(targetCode), inviting")
-        browser.invitePeer(peerID, to: session, withContext: nil, timeout: 15)
+        let theirCode = info?["code"] ?? "?"
+        let name = peerID.displayName
+        Task { @MainActor [weak owner = self.owner] in owner?.note("👀 Saw \(name) hosting code \(theirCode)") }
+        guard let session, let targetCode, theirCode.uppercased() == targetCode else { return }
+        Task { @MainActor [weak owner = self.owner] in owner?.note("🔗 Code matches, inviting \(name)") }
+        browser.invitePeer(peerID, to: session, withContext: nil, timeout: 30)
         Task { @MainActor [weak owner = self.owner] in owner?.peerConnecting() }
     }
 
     func browser(_ browser: MCNearbyServiceBrowser, lostPeer peerID: MCPeerID) {}
 
     func browser(_ browser: MCNearbyServiceBrowser, didNotStartBrowsingForPeers error: any Error) {
-        print("⚠️ Couldn't start searching:", error)
+        Task { @MainActor [weak owner = self.owner] in owner?.startFailed("searching", error) }
     }
 }

@@ -71,7 +71,8 @@ final class LiveActivityManager {
         let final = HuntActivityAttributes.ContentState(
             checkpointIndex: activity.attributes.totalCheckpoints,
             clue: finalMessage,
-            justCleared: true
+            justCleared: true,
+            finishedAt: .now   // freezes the timer on the Lock Screen / island / Watch
         )
         await activity.end(.init(state: final, staleDate: nil), dismissalPolicy: .after(.now.addingTimeInterval(finishedLingerTime)))
         self.activity = nil
