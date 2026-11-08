@@ -17,8 +17,9 @@ One file is compiled into both targets: `Quarry/Shared/HuntActivityAttributes.sw
 ## Data flow (one line each)
 
 - **Play:** `ContentView` → creates `HuntSession(hunt:)` → `session.start()` → `LiveActivityManager.start` → `PlayView` shows the clue → `VerifyCameraView` → `onCleared` → `session.clearCurrent()` → `LiveActivityManager.cleared`, then `advance` or `end`.
+- **Capture (available for B):** `CameraCaptureView { image in … }` → one `UIImage` per shutter tap; B stores feature prints and a ≤300 px thumbnail, not the full image.
 - **Create:** checkpoint editor → photo `UIImage` → `VisionMatcher.makeReferencePrint` → stored in `Checkpoint.referencePrints`.
-- **Verify:** camera frame → `VisionMatcher.bestDistance(from:to:)` → `VisionMatcher.score(forDistance:)` → ring progress → auto-capture → `onCleared()`.
+- **Verify (next milestone; not connected yet):** camera frame → `VisionMatcher.bestDistance(from:to:)` → `VisionMatcher.score(forDistance:)` → ring progress → auto-capture → `onCleared()`.
 - **Deep link:** tapping the Live Activity → `quarry://camera` → `.onOpenURL` in `PlayView` → opens the camera.
 
 ## Files
@@ -46,7 +47,9 @@ One file is compiled into both targets: `Quarry/Shared/HuntActivityAttributes.sw
 | File | Contains |
 |---|---|
 | `VisionMatcher.swift` | `nonisolated enum VisionMatcher`: `makeReferencePrint(from: UIImage) throws -> Data` · `bestDistance(from: UIImage, to: [Data]) throws -> Float` (smaller = closer) · `score(forDistance:strong:weak:) -> Double` (0…1; **thresholds still need tuning**). Uses `VNGenerateImageFeaturePrintRequest` + `NSKeyedArchiver`. |
-| `VerifyCameraView.swift` | `VerifyCameraView(checkpoint:onCleared:)`. **Currently a stub** with a "Pretend cleared" button. A replaces the body; the initializer stays the same. |
+| `VerifyCameraView.swift` | `VerifyCameraView(checkpoint:onCleared:)`: real back-camera preview and manual photo capture. Shows the last photo; never calls `onCleared` until Vision verification is implemented. Initializer unchanged. |
+| `CameraCaptureView.swift` | `CameraCaptureView(title:message:onCaptured:)` (title/message have defaults): reusable back-camera screen. Returns a `UIImage` on the main actor once per successful shutter tap; stays open for additional photos, caller may dismiss. Close/errors never invoke the callback. Handles permission, Settings, unavailable/interrupted camera, foreground lifecycle, rotation and last-photo preview. Private preview/status views. No Photos or SwiftData image persistence. |
+| `CameraSession.swift` | `CameraSession`: serial-queue AVFoundation session configuration, start/stop and still capture; private photo delegate retained through capture completion. Internal implementation for `CameraCaptureView`. |
 
 ### `Quarry/LiveActivity/` (C)
 | File | Contains |
