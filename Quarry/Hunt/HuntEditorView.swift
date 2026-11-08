@@ -26,6 +26,12 @@ struct HuntEditorView: View {
                             Text(cp.clue.isEmpty ? "New checkpoint" : cp.clue)
                                 .foregroundStyle(cp.clue.isEmpty ? .secondary : .primary)
                                 .lineLimit(2)
+                            Spacer()
+                            if !cp.isReady {
+                                Image(systemName: "exclamationmark.triangle.fill")
+                                    .foregroundStyle(.orange)
+                                    .accessibilityLabel("Needs a reference photo")
+                            }
                         }
                     }
                 }

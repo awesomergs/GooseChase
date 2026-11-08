@@ -83,6 +83,13 @@ final class HuntSession {
         advanceTask = nil
 
         currentIndex += 1
+
+        // After advancing, currentIndex equals the number of checkpoints cleared (0-based index
+        // now points to the NEXT checkpoint, so its value == cleared count). Report to the race.
+        if RaceSession.shared.isActive {
+            RaceSession.shared.reportProgress(cleared: currentIndex, total: checkpoints.count)
+        }
+
         if let next = current {
             Task { await LiveActivityManager.shared.advance(to: currentIndex + 1, clue: next.clue) }
         } else {
