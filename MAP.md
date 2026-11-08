@@ -27,6 +27,7 @@ One file is compiled into both targets: `Quarry/Shared/HuntActivityAttributes.sw
 ### `Quarry/` (app root)
 | File | Owner | Contains |
 |---|---|---|
+| `Info.plist` | C | Extra Info.plist keys merged with the generated ones: `quarry://` URL scheme, `NSLocalNetworkUsageDescription`, `NSBonjourServices` (`_quarry-hunt._tcp/_udp`), `.quarryhunt` exported type + document type. Excluded from Copy Bundle Resources via a membership exception. |
 | `QuarryApp.swift` | C | `@main QuarryApp`: SwiftData `ModelContainer` with schema `[Hunt, Checkpoint]`. |
 | `ContentView.swift` | B | `ContentView` (`NavigationStack(path: NavigationPath)` hunt list with first-checkpoint thumbnail, "+" creates a `Hunt` and pushes `HuntEditorView`, per-row Edit/Delete swipe actions; seeds demo data, ends stale Live Activities on launch; registers `navigationDestination` for both `Hunt` and `Checkpoint`); `PlayView(session:onClose:)` (clue screen, opens the camera, handles `quarry://camera`, finish state). Temporary; B may split it into `Hunt/` files. |
 | `Item.swift` | n/a | Empty placeholder. Delete. |
@@ -34,8 +35,10 @@ One file is compiled into both targets: `Quarry/Shared/HuntActivityAttributes.sw
 ### `Quarry/Shared/` (contract; change only after telling the team)
 | File | Contains |
 |---|---|
-| `Models.swift` | `enum CheckpointKind { exactMatch, object }` · `@Model Hunt` (`title`, `createdAt`, `checkpoints`, computed `orderedCheckpoints`) · `@Model Checkpoint` (`order`, `clue`, `kindRaw` + computed `kind`, `referencePrints: [Data]`, `thumbnail: Data?`, `targetLabel: String?`, `hunt`). |
+| `Models.swift` | `enum CheckpointKind { exactMatch, object }` · `@Model Hunt` (`title`, `createdAt`, `shareID: UUID`, `hostName`, `checkpoints`, computed `orderedCheckpoints`, computed `isPlayable`) · `@Model Checkpoint` (`order`, `clue`, `kindRaw` + computed `kind`, `referencePrints: [Data]`, `thumbnail: Data?`, `targetLabel: String?`, `hunt`, **location:** `latitude: Double?`, `longitude: Double?`, `radiusMeters` (40), `requiresLocation` (false), computed `coordinate: CLLocationCoordinate2D?`; computed `isReady`). |
 | `HuntActivityAttributes.swift` | `nonisolated struct HuntActivityAttributes: ActivityAttributes`: fixed `huntTitle`, `totalCheckpoints`, `startDate`; `ContentState` = `checkpointIndex` (1-based), `clue`, `justCleared`. Preview samples: `.preview`, `.searching`, `.cleared`. **Compiled into both targets.** |
+| `HuntPackage.swift` | `HuntPackage` / `CheckpointPackage` (Codable, Sendable; `HuntPackage` is `Transferable` via `CodableRepresentation(contentType: .quarryHunt)`), `UTType.quarryHunt` ("com.quarryapp.hunt", `.quarryhunt`), `HuntPackage.load(from: URL)`. B adds `init(hunt:)` / `importHunt(into:)` in `Hunt/HuntPackage+SwiftData.swift`. |
+| `RaceMessages.swift` | `PlayerProgress`, `NearbyMessage` (`hello`, `hunt`, `start(at:)`, `progress`, `leaderboard`; `encoded()` / `decode(_:)`), `RoomCode` (`make()`, `joinURL(_:)` → `quarry://join?code=…`, `code(from:)`), `PlayerIdentity` (`id`, `name`, UserDefaults). |
 
 ### `Quarry/Hunt/` (B)
 | File | Contains |
@@ -54,6 +57,25 @@ One file is compiled into both targets: `Quarry/Shared/HuntActivityAttributes.sw
 | `CameraCaptureView.swift` | `CameraCaptureView(title:message:referencePrints:onCaptured:)` (title/message have defaults; optional referencePrints defaults to nil, preserving existing calls): reusable back-camera screen. Returns a `UIImage` on the main actor once per successful shutter tap; stays open for additional photos, caller may dismiss. Close/errors never invoke the callback. Handles permission, Settings, unavailable/interrupted camera, foreground lifecycle, rotation and last-photo preview. Optional verification samples at ~5 Hz, verifies stills, shows score/ring and retry errors, and rejects stale results after lifecycle changes. Private preview/status views. No Photos or SwiftData image persistence. |
 | `CameraSession.swift` | `CameraSession`: serial-queue AVFoundation session configuration, start/stop, still capture, latest-frame video delegate and `matchScore(references:rotationAngle:photo:)` for serialized off-main Vision comparisons; private photo delegate retained through capture completion. Internal implementation for `CameraCaptureView`. |
 
+### `Quarry/Nearby/` (A) · planned (PLAN.md v3 A2–A4)
+| File | Contains |
+|---|---|
+| `NearbySession.swift` | *(to be created)* MultipeerConnectivity host/join by room code, `send(_:)`, `receivedHunt`, `startAt`, forwards race messages to `RaceSession`. |
+| `QRCodeView.swift`, `HostLobbyView.swift`, `JoinView.swift` | *(to be created)* QR display, host lobby with "Start for everyone", join screen with code field + QR scanner. |
+
+### `Quarry/Race/` (C) · planned (PLAN.md v3 C2)
+| File | Contains |
+|---|---|
+| `RaceSession.swift` | *(to be created)* standings, `begin`, `reportProgress`, `receive`, `rank(of:)`, `end`. |
+| `LeaderboardView.swift` | *(to be created)* live standings list. |
+
+### `Quarry/Location/` (A) · stretch goal (contract in SPEC.md)
+| File | Contains |
+|---|---|
+| `LocationService.swift` | *(to be created)* `@Observable @MainActor LocationService.shared`: `location`, `authorization`, `demoMode` (UserDefaults), `start()`, `stop()`, `distance(to:)`, `bearing(to:)`, `isHere(at:)`; `enum Warmth` (freezing…onFire, `label`, `color`). |
+| `LocationPickerView.swift` | *(to be created)* `LocationPickerView(checkpoint:)`: map pin, radius slider, "Use my location", "Must be here" toggle. Embedded by B in `CheckpointEditorView`. |
+| `HotColdView.swift` | *(to be created)* `HotColdView(checkpoint:)`: warmth card with distance + direction arrow. Embedded by B in `PlayView`. |
+
 ### `Quarry/LiveActivity/` (C)
 | File | Contains |
 |---|---|
@@ -68,7 +90,7 @@ One file is compiled into both targets: `Quarry/Shared/HuntActivityAttributes.sw
 | `Info.plist`, `Assets.xcassets` | Extension point config, widget colors. |
 
 ### Project settings (C only, in `Quarry.xcodeproj/project.pbxproj`)
-- App Info.plist keys (generated): `NSSupportsLiveActivities = YES`, `NSCameraUsageDescription`.
+- App Info.plist: generated keys (`NSSupportsLiveActivities = YES`, `NSCameraUsageDescription`, `NSLocationWhenInUseUsageDescription`) merged with `Quarry/Info.plist` (`INFOPLIST_FILE`).
 - Deployment target iOS 26.0. App target uses default MainActor isolation; the extension does not.
 - Membership exception: `Shared/HuntActivityAttributes.swift` → also in `QuarryWidgetsExtension`.
 
@@ -77,6 +99,6 @@ One file is compiled into both targets: `Quarry/Shared/HuntActivityAttributes.sw
 |---|---|
 | `SPEC.md` | Scope, contracts, work split, timeline, demo, conventions, rules for agents. |
 | `MAP.md` | This file. |
-| `PLAN.md` | Today's schedule: per-person tasks, agent prompts, merge steps, demo checklist. |
+| `PLAN.md` | Afternoon plan (v3: joining + leaderboard): per-person tasks, agent prompts, cut order, demo script, checklist. |
 | `AGENTS.md`, `CLAUDE.md` | Point coding agents to `SPEC.md` + `MAP.md`. |
 | `README.md` | Quick team overview. |
