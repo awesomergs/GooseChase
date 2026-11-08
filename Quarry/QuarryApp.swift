@@ -21,6 +21,9 @@ struct QuarryApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
+                #if DEBUG
+                .overlay(alignment: .bottomLeading) { NearbyDebugButton() }   // temporary: N2 test
+                #endif
         }
         .modelContainer(sharedModelContainer)
     }
