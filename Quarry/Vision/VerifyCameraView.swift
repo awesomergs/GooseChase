@@ -1,29 +1,25 @@
 //
-//  VerifyCameraView.swift  ·  OWNER: Person A (Vision)
-//  STUB so Person B can wire up the flow now. Replace the body with the real camera,
-//  confidence ring and auto-capture, but KEEP THE SAME INITIALIZER (checkpoint + onCleared).
+// VerifyCameraView.swift · OWNER: Person A
 //
-
 import SwiftUI
+import SwiftData
 
 struct VerifyCameraView: View {
     let checkpoint: Checkpoint
     let onCleared: () -> Void
 
     var body: some View {
-        ZStack {
-            Color.black.ignoresSafeArea()
-            VStack(spacing: 24) {
-                Text("Camera goes here")
-                    .font(.title2.bold())
-                    .foregroundStyle(.white)
-                Text(checkpoint.clue)
-                    .foregroundStyle(.white.opacity(0.8))
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal)
-                Button("Pretend cleared") { onCleared() }
-                    .buttonStyle(.borderedProminent)
-            }
+        CameraCaptureView(
+            title: checkpoint.clue,
+            message: "Take a photo to check the camera. Checkpoint verification is not available yet."
+        ) { _ in
+            // A photo alone is not proof of a match. Only successful Vision
+            // verification may call onCleared in the next milestone.
         }
     }
+}
+
+#Preview {
+    VerifyCameraView(checkpoint: Checkpoint(order: 0, clue: "Find the blue cup.", kind: .exactMatch), onCleared: {})
+        .modelContainer(for: [Hunt.self, Checkpoint.self], inMemory: true)
 }
