@@ -12,3 +12,6 @@ build/
 # Swift Package Manager
 .swiftpm/
 .build/
+
+# Scratch files from AI helpers (not part of the app)
+Claude outputs/
