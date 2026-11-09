@@ -9,19 +9,45 @@ import SwiftData
 struct CreateTab: View {
     let onPlay: (Hunt) -> Void
 
+    @Environment(\.colorScheme) private var colorScheme
     @Environment(\.modelContext) private var context
     @Query(filter: #Predicate<Hunt> { !$0.isJoined }, sort: \Hunt.createdAt, order: .reverse)
     private var hunts: [Hunt]
     @State private var path = NavigationPath()
 
     var body: some View {
+        let theme = QuarryTheme(colorScheme: colorScheme)
         NavigationStack(path: $path) {
             List {
+                if !hunts.isEmpty {
+                    HStack(spacing: 16) {
+                        Text("Your hunts")
+                            .font(.system(.title, design: .rounded).bold())
+                            .foregroundStyle(theme.primaryText)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                        Image("d f")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 88, height: 88)
+                            .shadow(color: .black.opacity(0.45), radius: 0.75, y: 1)
+                            .rotationEffect(.degrees(-8))
+                            .accessibilityHidden(true)
+                    }
+                    .padding(.vertical, 8)
+                    .listRowBackground(Color.clear)
+                    .listRowSeparator(.hidden)
+                }
                 ForEach(hunts) { hunt in
-                    NavigationLink(value: hunt) {
-                        HuntRow(hunt: hunt)
+                    HuntListRow(hunt: hunt) {
+                        if hunt.isPlayable { onPlay(hunt) }
+                    }
+                    .modifier(QuarryCardRow())
+                    .accessibilityAction(named: Text("Edit hunt")) {
+                        path.append(hunt)
                     }
                     .swipeActions(edge: .leading) {
+                        Button("Edit", systemImage: "pencil") { path.append(hunt) }
+                            .tint(theme.accent)
                         if hunt.isPlayable {
                             Button {
                                 onPlay(hunt)
@@ -60,6 +86,10 @@ struct CreateTab: View {
                     }
                 }
             }
+            .listStyle(.insetGrouped)
+            .listRowSpacing(QuarryTheme.cardSpacing)
+            .scrollContentBackground(.hidden)
+            .background(theme.canvas)
             .overlay {
                 if hunts.isEmpty {
                     ContentUnavailableView {
@@ -81,6 +111,7 @@ struct CreateTab: View {
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button("New hunt", systemImage: "plus", action: newHunt)
+                        .tint(theme.primaryText)
                 }
             }
             .navigationDestination(for: Hunt.self) { hunt in
