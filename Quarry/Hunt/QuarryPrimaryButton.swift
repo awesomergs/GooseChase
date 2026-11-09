@@ -18,7 +18,8 @@ struct QuarryPrimaryButton: View {
                 .padding(.vertical, 4)
                 .foregroundStyle(theme.onAccent)
         }
-        .buttonStyle(.glassProminent)
+        .buttonStyle(.borderedProminent)
+        .buttonBorderShape(.capsule)
         .controlSize(.large)
         .tint(theme.accent)
     }

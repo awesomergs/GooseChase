@@ -24,7 +24,11 @@ struct JoinTab: View {
     @State private var autoJoinPaused = false
     /// The hunt we've joined and are waiting to start.
     @State private var lobbyHunt: Hunt?
-    @FocusState private var codeFocused: Bool
+    private enum EntryField: Hashable {
+        case name, code
+    }
+
+    @FocusState private var focusedField: EntryField?
     private var nearby = NearbySession.shared
 
     init(linkCode: Binding<String?>, onStart: @escaping (Hunt, Date?) -> Void) {
@@ -39,12 +43,18 @@ struct JoinTab: View {
                     lobby(lobbyHunt)
                 } else {
                     entryForm
-                        .pageBackground()
                 }
             }
-            .navigationTitle(lobbyHunt == nil ? "Join a Game" : "")
-            .navigationBarTitleDisplayMode(lobbyHunt == nil ? .large : .inline)
+            .navigationTitle("")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar(lobbyHunt == nil ? .hidden : .visible, for: .navigationBar)
             .toolbar {
+                ToolbarItemGroup(placement: .keyboard) {
+                    if focusedField != nil {
+                        Spacer()
+                        Button("Done") { focusedField = nil }
+                    }
+                }
                 if lobbyHunt != nil {
                     ToolbarItem(placement: .cancellationAction) {
                         Button("Leave") { leaveLobby() }
@@ -79,6 +89,7 @@ struct JoinTab: View {
             }
             .onChange(of: linkCode) { _, newCode in consumeLinkCode(newCode) }
             .onAppear { consumeLinkCode(linkCode) }
+            .onDisappear { focusedField = nil }
             .sensoryFeedback(.success, trigger: lobbyHunt != nil)
         }
     }
@@ -86,101 +97,121 @@ struct JoinTab: View {
     // MARK: - Entry form
 
     private var entryForm: some View {
-        Form {
-            Section {
-                hero
-                    .listRowInsets(EdgeInsets())
-                    .listRowBackground(SkyCardBackground())
-            }
+        List {
+            HuntTabHeader(
+                title: isBusy ? "On our way…" : "Join a hunt",
+                subtitle: isBusy ? "Finding the host's phone." : "Your next chase starts here."
+            )
+            .listRowSeparator(.hidden)
+            .listRowInsets(EdgeInsets())
+            .listRowBackground(Color.clear)
 
-            Section {
+            VStack(alignment: .leading, spacing: 16) {
+                Text("Your name")
+                    .font(.headline)
                 TextField("Your name", text: $name)
+                    .focused($focusedField, equals: .name)
                     .textContentType(.givenName)
                     .submitLabel(.next)
-                    .onSubmit { codeFocused = true }
-            } header: {
-                Text("Your name")
-            } footer: {
-                Text("The host sees this when you join.")
-            }
+                    .onSubmit { focusedField = .code }
+                    .padding(12)
+                    .background(Color(.tertiarySystemFill), in: .rect(cornerRadius: 12))
 
-            Section {
                 Button {
+                    focusedField = nil
                     showScanner = true
                 } label: {
-                    Label("Scan the host's QR code", systemImage: "qrcode.viewfinder")
+                    Label("Scan QR code", systemImage: "qrcode.viewfinder")
                         .font(.headline)
-                        .frame(maxWidth: .infinity, minHeight: 44)
+                        .frame(maxWidth: .infinity, minHeight: 32)
                 }
                 .gooseProminent()
-                .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
+                .foregroundStyle(Brand.ink)
+                .disabled(isBusy)
+
+                HStack(spacing: 10) {
+                    Rectangle().frame(height: 1).foregroundStyle(.quaternary)
+                    Text("or enter room code")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
+                        .layoutPriority(1)
+                    Rectangle().frame(height: 1).foregroundStyle(.quaternary)
+                }
 
                 TextField("ABCD", text: $code)
-                    .font(.system(.title, design: .rounded, weight: .heavy))
+                    .font(.system(.title2, design: .rounded, weight: .bold))
                     .kerning(6)
                     .multilineTextAlignment(.center)
                     .textInputAutocapitalization(.characters)
                     .autocorrectionDisabled()
-                    .focused($codeFocused)
+                    .focused($focusedField, equals: .code)
+                    .submitLabel(.done)
+                    .onSubmit { focusedField = nil }
+                    .padding(12)
+                    .background(Color(.tertiarySystemFill), in: .rect(cornerRadius: 12))
                     .onChange(of: code) { _, newValue in
                         let cleaned = String(newValue.uppercased().filter { $0.isLetter || $0.isNumber }.prefix(4))
                         if cleaned != newValue { code = cleaned }
                         if cleaned.count == 4, !isBusy, !autoJoinPaused { startJoin() }
                     }
                     .accessibilityLabel("Room code")
-            } header: {
-                Text("Join")
-            } footer: {
-                Text("Scan the QR on the host's screen, or type their 4-letter code. Stay close to their phone.")
+
+                Text("Scan the host's QR code or enter their code. Stay close to their phone.")
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
             }
+            .padding(18)
+            .background(Color(.secondarySystemGroupedBackground), in: .rect(cornerRadius: 22))
+            .padding(.horizontal, 16)
+            .listRowInsets(EdgeInsets())
+            .listRowBackground(Color.clear)
 
             if nearby.status != .idle && nearby.status != .hosting {
-                Section { statusRow }
+                statusRow
+                    .padding(18)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(Color(.secondarySystemGroupedBackground), in: .rect(cornerRadius: 22))
+                    .padding(.horizontal, 16)
+                    .listRowInsets(EdgeInsets())
+                    .listRowBackground(Color.clear)
             }
 
             if !games.isEmpty {
-                Section("Your games") {
-                    ForEach(games) { hunt in
-                        Button {
-                            if hunt.isPlayable { onStart(hunt, nil) }
+                Text("Your games")
+                    .font(.title2.bold())
+                    .accessibilityAddTraits(.isHeader)
+                    .listRowBackground(Color.clear)
+                ForEach(games) { hunt in
+                    Button {
+                        if hunt.isPlayable { onStart(hunt, nil) }
+                    } label: {
+                        GameRow(hunt: hunt)
+                            .padding(16)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .background(Color(.secondarySystemGroupedBackground), in: .rect(cornerRadius: 20))
+                    }
+                    .buttonStyle(.plain)
+                    .disabled(!hunt.isPlayable)
+                    .padding(.horizontal, 16)
+                    .listRowInsets(EdgeInsets())
+                    .listRowBackground(Color.clear)
+                    .swipeActions {
+                        Button(role: .destructive) {
+                            context.delete(hunt)
                         } label: {
-                            GameRow(hunt: hunt)
-                        }
-                        .tint(.primary)
-                        .swipeActions {
-                            Button(role: .destructive) {
-                                context.delete(hunt)
-                            } label: {
-                                Label("Delete", systemImage: "trash")
-                            }
+                            Label("Delete", systemImage: "trash")
                         }
                     }
                 }
             }
         }
-    }
-
-    /// Sky banner at the top of the form; the goose runs while we look for the host.
-    private var hero: some View {
-        HStack(alignment: .bottom, spacing: 8) {
-            VStack(alignment: .leading, spacing: 4) {
-                Text(isBusy ? "On our way…" : "Ready to chase?")
-                    .font(.title2.bold())
-                    .contentTransition(.opacity)
-                Text(isBusy ? "Finding the host's phone." : "Find it. Snap it. Honk.")
-                    .font(.subheadline.weight(.medium))
-                    .opacity(0.9)
-            }
-            .foregroundStyle(.white)
-            .padding(.bottom, 26)
-            Spacer(minLength: 0)
-            GooseView(mood: isBusy ? .running : .waiting)
-                .frame(height: 96)
-                .padding(.bottom, 4)
-        }
-        .padding(.horizontal, 18)
-        .padding(.top, 14)
-        .animation(.easeInOut, value: isBusy)
+        .listStyle(.plain)
+        .listRowSpacing(12)
+        .listRowSeparator(.hidden)
+        .scrollContentBackground(.hidden)
+        .scrollDismissesKeyboard(.interactively)
+        .background(HuntTabBackground())
     }
 
     @ViewBuilder
@@ -275,7 +306,7 @@ struct JoinTab: View {
         guard code.count == 4 else { return }
         let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
         PlayerIdentity.name = trimmed.isEmpty ? "Player" : trimmed
-        codeFocused = false
+        focusedField = nil
         nearby.join(code: code)
     }
 

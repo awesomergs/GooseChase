@@ -20,56 +20,87 @@ struct HostTab: View {
     var body: some View {
         NavigationStack {
             List {
-                if !playable.isEmpty {
-                    Section {
-                        ForEach(playable) { hunt in
+                HuntTabHeader(title: "Bring the flock", subtitle: "Pick a hunt. Get everyone together.")
+                    .listRowSeparator(.hidden)
+                    .listRowInsets(EdgeInsets())
+                    .listRowBackground(Color.clear)
+
+                if playable.isEmpty {
+                    VStack(alignment: .leading, spacing: 14) {
+                        Text(hunts.isEmpty ? "Your first chase starts here" : "Almost ready to host")
+                            .font(.title2.bold())
+                        Text("Create a hunt with a clue and reference photos for every checkpoint, then invite your friends.")
+                            .foregroundStyle(.secondary)
+                        Button("Create a hunt", systemImage: "plus", action: onCreateHunt)
+                            .gooseProminent()
+                            .foregroundStyle(Brand.ink)
+                    }
+                    .padding(18)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(Color(.secondarySystemGroupedBackground), in: .rect(cornerRadius: 22))
+                    .padding(.horizontal, 16)
+                    .listRowInsets(EdgeInsets())
+                    .listRowBackground(Color.clear)
+                } else {
+                    Text("Ready to host")
+                        .font(.title2.bold())
+                        .accessibilityAddTraits(.isHeader)
+                        .listRowBackground(Color.clear)
+                    ForEach(playable) { hunt in
+                        VStack(alignment: .leading, spacing: 14) {
+                            HuntRow(hunt: hunt)
+                            Label("Ready", systemImage: "checkmark.circle.fill")
+                                .font(.subheadline.weight(.semibold))
+                                .foregroundStyle(Color(red: 0.18, green: 0.46, blue: 0.23))
                             Button {
                                 lobbyHunt = hunt
                             } label: {
-                                HStack {
-                                    HuntRow(hunt: hunt)
-                                    Spacer()
-                                    Image(systemName: "chevron.right")
-                                        .font(.footnote.weight(.semibold))
-                                        .foregroundStyle(.tertiary)
-                                }
+                                Text("Host this hunt")
+                                    .font(.headline)
+                                    .frame(maxWidth: .infinity, minHeight: 32)
                             }
-                            .tint(.primary)
+                            .gooseProminent()
+                            .foregroundStyle(Brand.ink)
                         }
-                    } header: {
-                        Text("Pick a hunt to host")
-                    } footer: {
-                        Text("Friends join from the Join tab by scanning your QR code. Everyone starts together.")
+                        .padding(18)
+                        .background(Color(.secondarySystemGroupedBackground), in: .rect(cornerRadius: 22))
+                        .padding(.horizontal, 16)
+                        .listRowInsets(EdgeInsets())
+                        .listRowBackground(Color.clear)
                     }
                 }
 
                 if !unfinished.isEmpty {
-                    Section("Not ready yet") {
-                        ForEach(unfinished) { hunt in
-                            HuntRow(hunt: hunt)
-                                .opacity(0.6)
+                    Text("Needs a little work")
+                        .font(.title2.bold())
+                        .accessibilityAddTraits(.isHeader)
+                        .listRowBackground(Color.clear)
+                    ForEach(unfinished) { hunt in
+                        Button(action: onCreateHunt) {
+                            HStack {
+                                HuntRow(hunt: hunt)
+                                Spacer(minLength: 8)
+                                Image(systemName: "pencil")
+                                    .accessibilityHidden(true)
+                            }
+                            .padding(18)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .background(Color(.secondarySystemGroupedBackground), in: .rect(cornerRadius: 22))
                         }
+                        .buttonStyle(.plain)
+                        .accessibilityHint("Opens your hunts in the Create tab.")
+                        .padding(.horizontal, 16)
+                        .listRowInsets(EdgeInsets())
+                        .listRowBackground(Color.clear)
                     }
                 }
             }
-            .overlay {
-                if playable.isEmpty {
-                    ContentUnavailableView {
-                        VStack(spacing: 8) {
-                            GooseView(mood: .waiting)
-                                .frame(height: 110)
-                            Text("Nothing to host yet")
-                        }
-                    } description: {
-                        Text("Create a hunt with photos for each checkpoint, then host it here.")
-                    } actions: {
-                        Button("Create a hunt", action: onCreateHunt)
-                            .gooseProminent()
-                    }
-                }
-            }
-            .pageBackground()
-            .navigationTitle("Host a Game")
+            .listStyle(.plain)
+            .listRowSpacing(12)
+            .listRowSeparator(.hidden)
+            .scrollContentBackground(.hidden)
+            .background(HuntTabBackground())
+            .toolbar(.hidden, for: .navigationBar)
             .sheet(item: $lobbyHunt) { hunt in
                 HostLobbyView(hunt: hunt) { date in
                     lobbyHunt = nil
@@ -83,4 +114,9 @@ struct HostTab: View {
             }
         }
     }
+}
+
+#Preview {
+    HostTab(onStart: { _, _ in }, onCreateHunt: {})
+        .modelContainer(for: [Hunt.self, Checkpoint.self], inMemory: true)
 }
