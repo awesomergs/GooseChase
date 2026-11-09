@@ -14,7 +14,7 @@
 		</dict>
 	</array>
 	<key>NSLocalNetworkUsageDescription</key>
-	<string>Quarry connects to nearby players so you can join a hunt and see the live leaderboard.</string>
+	<string>GooseChase connects to nearby players so you can join and start a hunt together.</string>
 	<key>NSBonjourServices</key>
 	<array>
 		<string>_quarry-hunt._tcp</string>
@@ -26,7 +26,7 @@
 			<key>UTTypeIdentifier</key>
 			<string>com.quarryapp.hunt</string>
 			<key>UTTypeDescription</key>
-			<string>Quarry Hunt</string>
+			<string>GooseChase Hunt</string>
 			<key>UTTypeConformsTo</key>
 			<array>
 				<string>public.data</string>
@@ -45,13 +45,28 @@
 	<array>
 		<dict>
 			<key>CFBundleTypeName</key>
-			<string>Quarry Hunt</string>
+			<string>GooseChase Hunt</string>
 			<key>LSHandlerRank</key>
 			<string>Owner</string>
 			<key>LSItemContentTypes</key>
 			<array>
 				<string>com.quarryapp.hunt</string>
 			</array>
+		</dict>
+	</array>
+	<key>INAlternativeAppNames</key>
+	<array>
+		<dict>
+			<key>INAlternativeAppName</key>
+			<string>Goose Chase</string>
+			<key>INAlternativeAppNamePronunciationHint</key>
+			<string>goose chase</string>
+		</dict>
+		<dict>
+			<key>INAlternativeAppName</key>
+			<string>Goose</string>
+			<key>INAlternativeAppNamePronunciationHint</key>
+			<string>goose</string>
 		</dict>
 	</array>
 	<key>LSSupportsOpeningDocumentsInPlace</key>
