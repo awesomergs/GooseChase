@@ -1,289 +1,166 @@
 //
-//  ContentView.swift · OWNER: Person B (hunt flow)
+//  ContentView.swift  ·  OWNER: Rohan (restructured into tabs)
+//  App shell: three tabs (Join | Host | Create) plus the shared game launcher
+//  (countdown + full-screen PlayView) and incoming links/files.
 //
 
 import SwiftUI
 import SwiftData
 
+enum AppTab: Hashable {
+    case join, host, create
+}
+
 struct ContentView: View {
     @Environment(\.modelContext) private var context
     @Environment(\.colorScheme) private var colorScheme
-    @Query(sort: \Hunt.createdAt) private var hunts: [Hunt]
-    @State private var session: HuntSession?
-    @State private var path = NavigationPath()
+    @State private var selection: AppTab = .join
+    @State private var game: GameLaunch?
+    @State private var incomingPackage: IncomingPackage?
+    /// Room code from a quarry://join link (iPhone Camera app scanned the host's QR).
+    @State private var linkCode: String?
 
     var body: some View {
         let theme = QuarryTheme(colorScheme: colorScheme)
-        NavigationStack(path: $path) {
-            List {
-                if !hunts.isEmpty {
-                    HStack(spacing: 16) {
-                        Text("Your hunts")
-                            .font(.system(.title, design: .rounded).bold())
-                            .foregroundStyle(theme.primaryText)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                        Image("d f")
-                            .resizable()
-                            .scaledToFit()
-                            .frame(width: 88, height: 88)
-                            .shadow(color: .black.opacity(0.45), radius: 0.75, y: 1)
-                            .rotationEffect(.degrees(-8))
-                            .accessibilityHidden(true)
-                    }
-                    .padding(.vertical, 8)
-                    .listRowBackground(Color.clear)
-                    .listRowSeparator(.hidden)
-                }
-                ForEach(hunts) { hunt in
-                    HuntListRow(hunt: hunt) { start(hunt) }
-                        .modifier(QuarryCardRow())
-                        .swipeActions(edge: .leading) {
-                            Button("Edit", systemImage: "pencil") {
-                                path.append(hunt)
-                            }
-                            .tint(theme.accent)
-                        }
-                        .swipeActions(edge: .trailing) {
-                            Button("Delete", systemImage: "trash", role: .destructive) {
-                                context.delete(hunt)
-                            }
-                        }
-                        .accessibilityAction(named: Text("Edit hunt")) {
-                            path.append(hunt)
-                        }
-                }
+        TabView(selection: $selection) {
+            Tab("Join", systemImage: "qrcode.viewfinder", value: AppTab.join) {
+                JoinTab(linkCode: $linkCode, onStart: launch)
             }
-            .listStyle(.insetGrouped)
-            .listRowSpacing(QuarryTheme.cardSpacing)
-            .scrollContentBackground(.hidden)
-            .background(theme.canvas)
-            .overlay {
-                if hunts.isEmpty {
-                    ContentUnavailableView {
-                        Image("d f")
-                            .resizable()
-                            .scaledToFit()
-                            .frame(width: 120, height: 120)
-                            .shadow(color: .black.opacity(0.45), radius: 0.75, y: 1)
-                            .accessibilityHidden(true)
-                        Text("No hunts yet")
-                            .foregroundStyle(theme.primaryText)
-                    } description: {
-                        Text("Create a hunt and add your first checkpoint.")
-                            .foregroundStyle(theme.secondaryText)
-                    } actions: {
-                        QuarryPrimaryButton(
-                            title: "Create hunt", systemImage: "plus", action: createHunt
-                        )
-                        .frame(maxWidth: 320)
-                    }
-                }
+            Tab("Host", systemImage: "dot.radiowaves.left.and.right", value: AppTab.host) {
+                HostTab(onStart: launch, onCreateHunt: { selection = .create })
             }
-            .navigationTitle("Quarry")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbarBackground(QuarryTheme(colorScheme: .light).accent, for: .navigationBar)
-            .toolbarBackgroundVisibility(.visible, for: .navigationBar)
-            .toolbarColorScheme(.light, for: .navigationBar)
-            .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button("Create hunt", systemImage: "plus", action: createHunt)
-                        .tint(QuarryTheme(colorScheme: .light).primaryText)
-                }
+            Tab("Create", systemImage: "plus.square.on.square", value: AppTab.create) {
+                CreateTab(onPlay: { hunt in launch(hunt, nil) })
             }
-            .navigationDestination(for: Hunt.self) { hunt in
-                HuntEditorView(hunt: hunt, path: $path)
+        }
+        .fullScreenCover(item: $game) { launch in
+            PlayView(session: launch.session, startAt: launch.startAt) {
+                finish(launch)
             }
-            .navigationDestination(for: Checkpoint.self) { cp in
-                CheckpointEditorView(checkpoint: cp)
-            }
-            .fullScreenCover(item: $session) { s in
-                PlayView(session: s) { session = nil }
+        }
+        // AirDrop / Messages: a .quarryhunt file was opened
+        .sheet(item: $incomingPackage) { incoming in
+            ImportHuntSheet(package: incoming.package) {
+                incomingPackage = nil
+                selection = .join
+            } onCancel: {
+                incomingPackage = nil
             }
         }
         .tint(theme.accent)
+        .scrollContentBackground(.hidden)
+        .background(theme.canvas)
+        .onOpenURL { url in
+            if let code = RoomCode.code(from: url) {
+                selection = .join
+                linkCode = code
+            } else if url.isFileURL, let pkg = try? HuntPackage.load(from: url) {
+                incomingPackage = IncomingPackage(package: pkg)
+            }
+            // quarry://camera is handled by PlayView while a game is running.
+        }
         .onAppear { DemoData.seedIfEmpty(context) }
         .task { await LiveActivityManager.shared.endAllStale() }
     }
 
-    private func createHunt() {
-        let hunt = Hunt(title: "New Hunt")
-        context.insert(hunt)
-        path.append(hunt)
+    // MARK: - Game launcher
+
+    /// Starts a game. `startAt` = synced start time (shows a 3-2-1 countdown); nil = start now.
+    private func launch(_ hunt: Hunt, _ startAt: Date?) {
+        let session = HuntSession(hunt: hunt)
+        if startAt == nil { session.start() }   // PlayView starts it after the countdown otherwise
+        game = GameLaunch(session: session, startAt: startAt)
     }
 
-    private func start(_ hunt: Hunt) {
-        let newSession = HuntSession(hunt: hunt)
-        newSession.start()
-        session = newSession
+    /// Records the result (for "Your games") and tears down any nearby connection.
+    private func finish(_ launch: GameLaunch) {
+        let session = launch.session
+        if session.isFinished {
+            let hunt = session.hunt
+            hunt.lastPlayedAt = .now
+            let time = session.totalTime
+            hunt.bestTime = min(hunt.bestTime ?? .infinity, time)
+        }
+        NearbySession.shared.stop()
+        game = nil
     }
 }
 
-extension HuntSession: Identifiable {}
+/// A game being played (identifiable so it can drive .fullScreenCover(item:)).
+struct GameLaunch: Identifiable {
+    let id = UUID()
+    let session: HuntSession
+    let startAt: Date?
+}
 
-struct PlayView: View {
-    @Bindable var session: HuntSession
-    let onClose: () -> Void
-    @State private var showCamera = false
-    @State private var completedAt: Date?
-    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
-    @Environment(\.verticalSizeClass) private var verticalSizeClass
-    @Environment(\.colorScheme) private var colorScheme
+/// Small helpers shared by the tabs.
+@ViewBuilder
+func huntThumbnail(_ data: Data?, size: CGFloat = 44) -> some View {
+    if let data, let image = UIImage(data: data) {
+        Image(uiImage: image)
+            .resizable()
+            .scaledToFill()
+            .frame(width: size, height: size)
+            .clipShape(RoundedRectangle(cornerRadius: size * 0.2))
+    } else {
+        Image(systemName: "flag.fill")
+            .foregroundStyle(QuarryTheme(colorScheme: .light).accent)
+            .frame(width: size, height: size)
+            .background(QuarryTheme(colorScheme: .light).sand, in: RoundedRectangle(cornerRadius: size * 0.2))
+    }
+}
+
+private struct IncomingPackage: Identifiable {
+    var id: UUID { package.shareID }
+    let package: HuntPackage
+}
+
+// MARK: - Import confirmation sheet
+
+private struct ImportHuntSheet: View {
+    let package: HuntPackage
+    let onImported: () -> Void
+    let onCancel: () -> Void
+    @Environment(\.modelContext) private var context
 
     var body: some View {
-        let theme = QuarryTheme(colorScheme: colorScheme)
         NavigationStack {
-            ScrollView {
-                VStack(alignment: .leading, spacing: QuarryTheme.sectionSpacing) {
-                    QuarryProgressView(cleared: min(session.currentIndex, session.checkpoints.count),
-                                       total: session.checkpoints.count)
-                    if let cp = session.current {
-                        VStack(alignment: .leading, spacing: 20) {
-                            Label("Checkpoint \(session.progressText)", systemImage: "mappin.circle.fill")
-                                .font(.subheadline.weight(.semibold))
-                                .foregroundStyle(theme.accent)
-                            Text(cp.clue)
-                                .font(.system(.title, design: .rounded).bold())
-                                .fixedSize(horizontal: false, vertical: true)
-                        }
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(24)
-                        .background(theme.card, in: .rect(cornerRadius: QuarryTheme.cardRadius))
-                        metrics(finished: false)
-                        Label("Point your camera at the object when you find it.", systemImage: "camera")
-                            .font(.subheadline)
-                            .foregroundStyle(theme.secondaryText)
-                            .padding(16)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .background(theme.sand, in: .rect(cornerRadius: QuarryTheme.cardRadius))
-                    } else {
-                        VStack(spacing: 16) {
-                            Image("d f")
-                                .resizable()
-                                .scaledToFit()
-                                .frame(width: 140, height: 140)
-                            .shadow(color: .black.opacity(0.45), radius: 0.75, y: 1)
-                                .rotationEffect(.degrees(-8))
-                                .accessibilityHidden(true)
-                            Text("Hunt complete!")
-                                .font(.system(.largeTitle, design: .rounded).bold())
-                            Text(session.hunt.title)
-                                .font(QuarryTheme.heading)
-                            Label("All checkpoints verified", systemImage: "checkmark.seal.fill")
-                                .font(.subheadline)
-                                .foregroundStyle(theme.secondaryText)
-                        }
-                        .multilineTextAlignment(.center)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 24)
-                        metrics(finished: true)
-                    }
-                    if inlineAction {
-                        primaryAction
-                    }
-                }
-                .frame(maxWidth: 600, alignment: .leading)
-                .padding(20)
-                .frame(maxWidth: .infinity)
+            VStack(spacing: 16) {
+                Spacer()
+                Image(systemName: "flag.fill")
+                    .font(.system(size: 56))
+                    .foregroundStyle(QuarryTheme(colorScheme: .light).accent)
+                Text("Join \"\(package.title)\"?")
+                    .font(.title2.bold())
+                    .multilineTextAlignment(.center)
+                Text("\(package.checkpoints.count) checkpoints · from \(package.hostName.isEmpty ? "someone" : package.hostName)")
+                    .foregroundStyle(.secondary)
+                Spacer()
             }
-            .safeAreaInset(edge: .bottom) {
-                if !inlineAction {
-                    primaryAction
-                        .frame(maxWidth: 600)
-                        .padding(.horizontal, 20)
-                        .padding(.vertical, 12)
-                        .frame(maxWidth: .infinity)
-                        .background(theme.canvas)
-                }
-            }
-            .foregroundStyle(theme.primaryText)
-            .background(theme.canvas)
-            .navigationTitle(session.hunt.title)
+            .padding()
+            .frame(maxWidth: .infinity)
+            .background(QuarryTheme(colorScheme: .light).canvas)
+            .navigationTitle("New Hunt")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
-                    Button("End", systemImage: "xmark") {
-                        if session.current != nil { session.quit() }
-                        onClose()
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel", action: onCancel)
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Join") {
+                        let hunt = package.importHunt(into: context)
+                        hunt.isJoined = true
+                        try? context.save()
+                        onImported()
                     }
                 }
             }
-            .fullScreenCover(isPresented: $showCamera) {
-                if let cp = session.current {
-                    VerifyCameraView(checkpoint: cp) {
-                        showCamera = false
-                        session.clearCurrent()
-                    }
-                }
-            }
-            .tint(theme.accent)
-            .onChange(of: session.current == nil, initial: true) { _, complete in
-                if complete, completedAt == nil { completedAt = .now }
-            }
-            // Tapping the Live Activity / Dynamic Island opens quarry://camera
-            .onOpenURL { url in
-                if url.host == "camera", session.current != nil { showCamera = true }
-            }
         }
+        .presentationDetents([.medium])
     }
-
-    private var inlineAction: Bool {
-        dynamicTypeSize.isAccessibilitySize || verticalSizeClass == .compact
-    }
-
-    @ViewBuilder
-    private var primaryAction: some View {
-        if session.current != nil {
-            QuarryPrimaryButton(title: "Open camera", systemImage: "camera.fill") {
-                showCamera = true
-            }
-        } else {
-            QuarryPrimaryButton(title: "Done", systemImage: "checkmark", action: onClose)
-        }
-    }
-
-    private func metrics(finished: Bool) -> some View {
-        let layout = dynamicTypeSize.isAccessibilitySize
-            ? AnyLayout(VStackLayout(spacing: 12))
-            : AnyLayout(HStackLayout(alignment: .top, spacing: 12))
-        return layout {
-            QuarryMetricView(title: "Cleared",
-                             value: Text("\(min(session.currentIndex, session.checkpoints.count)) of \(session.checkpoints.count)"),
-                             systemImage: "flag.checkered")
-            QuarryMetricView(title: finished ? "Total time" : "Elapsed",
-                             value: Text(timerInterval: session.startDate...Date.distantFuture,
-                                         pauseTime: finished ? completedAt : nil, countsDown: false),
-                             systemImage: "clock")
-        }
-    }
-
 }
 
 #Preview {
     ContentView()
-        .modelContainer(for: [Hunt.self, Checkpoint.self], inMemory: true)
-}
-
-#Preview("Dark") {
-    ContentView()
-        .preferredColorScheme(.dark)
-        .modelContainer(for: [Hunt.self, Checkpoint.self], inMemory: true)
-}
-
-#Preview("Accessibility") {
-    ContentView()
-        .environment(\.dynamicTypeSize, .accessibility5)
-        .modelContainer(for: [Hunt.self, Checkpoint.self], inMemory: true)
-}
-
-#Preview("Active clue") {
-    let hunt = Hunt(title: "Birthday Hunt")
-    let checkpoint = Checkpoint(order: 0, clue: "Find the fountain beside the old oak. Look for the little bird perched on its rim.", kind: .exactMatch)
-    hunt.checkpoints = [checkpoint]
-    return PlayView(session: HuntSession(hunt: hunt), onClose: {})
-        .modelContainer(for: [Hunt.self, Checkpoint.self], inMemory: true)
-}
-
-#Preview("Completion") {
-    PlayView(session: HuntSession(hunt: Hunt(title: "Birthday Hunt")), onClose: {})
         .modelContainer(for: [Hunt.self, Checkpoint.self], inMemory: true)
 }

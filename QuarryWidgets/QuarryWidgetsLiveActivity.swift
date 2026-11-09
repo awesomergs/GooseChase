@@ -76,7 +76,7 @@ struct HuntLiveActivity: Widget {
                         Text("Time")
                             .font(.caption2)
                             .foregroundStyle(.secondary)
-                        ElapsedTimer(start: context.attributes.startDate)
+                        ElapsedTimer(start: context.attributes.startDate, end: context.state.finishedAt)
                             .font(.headline)
                             .foregroundStyle(islandTheme.secondaryText)
                             .frame(maxWidth: 72, alignment: .trailing)
@@ -118,7 +118,7 @@ struct HuntLiveActivity: Widget {
                         .foregroundStyle(progress.tint)
                 }
             } compactTrailing: {
-                ElapsedTimer(start: context.attributes.startDate)
+                ElapsedTimer(start: context.attributes.startDate, end: context.state.finishedAt)
                     .font(.caption.weight(.bold))
                     .foregroundStyle(islandTheme.secondaryText)
                     .frame(width: 42, alignment: .trailing)
@@ -194,12 +194,28 @@ struct ProgressRing: View {
 }
 
 /// Counts up from `start` without the app sending updates.
+/// Once `end` is set (hunt complete), shows the fixed final time instead.
 struct ElapsedTimer: View {
     let start: Date
+    var end: Date? = nil
+
     var body: some View {
-        Text(timerInterval: start...Date.distantFuture, countsDown: false)
-            .monospacedDigit()
-            .multilineTextAlignment(.trailing)
+        if let end {
+            Text(Self.format(end.timeIntervalSince(start)))
+                .monospacedDigit()
+                .multilineTextAlignment(.trailing)
+        } else {
+            Text(timerInterval: start...Date.distantFuture, countsDown: false)
+                .monospacedDigit()
+                .multilineTextAlignment(.trailing)
+        }
+    }
+
+    static func format(_ seconds: TimeInterval) -> String {
+        let s = max(0, Int(seconds.rounded()))
+        return s >= 3600
+            ? String(format: "%d:%02d:%02d", s / 3600, (s % 3600) / 60, s % 60)
+            : String(format: "%d:%02d", s / 60, s % 60)
     }
 }
 
@@ -234,7 +250,7 @@ struct LockScreenHuntView: View {
                     .font(.headline)
                     .foregroundStyle(progress.justCleared ? theme.verified : theme.accent)
                 Spacer()
-                ElapsedTimer(start: context.attributes.startDate)
+                ElapsedTimer(start: context.attributes.startDate, end: context.state.finishedAt)
                     .font(.headline)
                     .foregroundStyle(theme.secondaryText)
                     .frame(maxWidth: 60, alignment: .trailing)
@@ -254,7 +270,7 @@ struct LockScreenHuntView: View {
                 Label(context.attributes.huntTitle, systemImage: "viewfinder")
                     .font(.subheadline.weight(.semibold))
                 Spacer()
-                ElapsedTimer(start: context.attributes.startDate)
+                ElapsedTimer(start: context.attributes.startDate, end: context.state.finishedAt)
                     .font(.headline)
                     .frame(maxWidth: 70, alignment: .trailing)
             }

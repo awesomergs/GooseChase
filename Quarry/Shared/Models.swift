@@ -20,6 +20,12 @@ final class Hunt {
     var shareID: UUID = UUID()
     /// Who made it ("Rohan"). Shown on the join screen.
     var hostName: String = ""
+    /// True for hunts received from someone else (joined or AirDropped). They appear under
+    /// "Your games" in the Join tab, never in Create / Host.
+    var isJoined: Bool = false
+    /// When this phone last finished the hunt, and its best total time (seconds).
+    var lastPlayedAt: Date?
+    var bestTime: Double?
     @Relationship(deleteRule: .cascade, inverse: \Checkpoint.hunt)
     var checkpoints: [Checkpoint] = []
 

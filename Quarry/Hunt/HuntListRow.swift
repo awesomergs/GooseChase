@@ -47,6 +47,7 @@ struct HuntListRow: View {
                 .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
+            .disabled(!hunt.isPlayable)
             .accessibilityHint("Starts this hunt")
 
             Divider()
@@ -62,6 +63,7 @@ struct HuntListRow: View {
                 .buttonStyle(.bordered)
                 .tint(theme.accent)
                 QuarryPrimaryButton(title: "Start hunt", systemImage: "play.fill", action: onStart)
+                    .disabled(!hunt.isPlayable)
                     .accessibilityLabel(Text("Start \(hunt.title)"))
             }
         }
