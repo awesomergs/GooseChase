@@ -13,6 +13,7 @@ enum AppTab: Hashable {
 
 struct ContentView: View {
     @Environment(\.modelContext) private var context
+    @Environment(\.colorScheme) private var colorScheme
     @State private var selection: AppTab = .join
     @State private var game: GameLaunch?
     @State private var incomingPackage: IncomingPackage?
@@ -20,6 +21,7 @@ struct ContentView: View {
     @State private var linkCode: String?
 
     var body: some View {
+        let theme = QuarryTheme(colorScheme: colorScheme)
         TabView(selection: $selection) {
             Tab("Join", systemImage: "qrcode.viewfinder", value: AppTab.join) {
                 JoinTab(linkCode: $linkCode, onStart: launch)
@@ -45,6 +47,9 @@ struct ContentView: View {
                 incomingPackage = nil
             }
         }
+        .tint(theme.accent)
+        .scrollContentBackground(.hidden)
+        .background(theme.canvas)
         .onOpenURL { url in
             if let code = RoomCode.code(from: url) {
                 selection = .join
@@ -99,9 +104,9 @@ func huntThumbnail(_ data: Data?, size: CGFloat = 44) -> some View {
             .clipShape(RoundedRectangle(cornerRadius: size * 0.2))
     } else {
         Image(systemName: "flag.fill")
-            .foregroundStyle(.indigo)
+            .foregroundStyle(QuarryTheme(colorScheme: .light).accent)
             .frame(width: size, height: size)
-            .background(.indigo.opacity(0.12), in: RoundedRectangle(cornerRadius: size * 0.2))
+            .background(QuarryTheme(colorScheme: .light).sand, in: RoundedRectangle(cornerRadius: size * 0.2))
     }
 }
 
@@ -124,7 +129,7 @@ private struct ImportHuntSheet: View {
                 Spacer()
                 Image(systemName: "flag.fill")
                     .font(.system(size: 56))
-                    .foregroundStyle(.indigo)
+                    .foregroundStyle(QuarryTheme(colorScheme: .light).accent)
                 Text("Join \"\(package.title)\"?")
                     .font(.title2.bold())
                     .multilineTextAlignment(.center)
@@ -133,6 +138,8 @@ private struct ImportHuntSheet: View {
                 Spacer()
             }
             .padding()
+            .frame(maxWidth: .infinity)
+            .background(QuarryTheme(colorScheme: .light).canvas)
             .navigationTitle("New Hunt")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

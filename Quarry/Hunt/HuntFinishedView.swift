@@ -15,8 +15,12 @@ struct HuntFinishedView: View {
 
     var body: some View {
         VStack(spacing: 20) {
-            Image(systemName: "flag.checkered")
-                .font(.system(size: 56))
+            Image("d f")
+                .resizable()
+                .scaledToFit()
+                .frame(width: 140, height: 140)
+                .rotationEffect(.degrees(-8))
+                .accessibilityHidden(true)
             Text("Hunt complete!")
                 .font(.largeTitle.bold())
             Label(mmss(session.totalTime), systemImage: "stopwatch")
@@ -47,7 +51,7 @@ struct HuntFinishedView: View {
                 Text("Done")
                     .frame(maxWidth: .infinity)
             }
-            .buttonStyle(.borderedProminent)
+            .buttonStyle(.glassProminent)
             .controlSize(.large)
         }
         .padding(24)

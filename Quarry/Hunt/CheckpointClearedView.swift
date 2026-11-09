@@ -17,7 +17,7 @@ struct CheckpointClearedView: View {
             Spacer()
             Image(systemName: "checkmark.circle.fill")
                 .font(.system(size: 88))
-                .foregroundStyle(.green)
+                .foregroundStyle(QuarryTheme(colorScheme: .light).verified)
             Text("Checkpoint \(session.lastClearedNumber) cleared!")
                 .font(.title.bold())
                 .multilineTextAlignment(.center)
@@ -37,7 +37,7 @@ struct CheckpointClearedView: View {
                 Text(isLast ? "Finish" : "Next clue")
                     .frame(maxWidth: .infinity)
             }
-            .buttonStyle(.borderedProminent)
+            .buttonStyle(.glassProminent)
             .controlSize(.large)
         }
         .padding(24)
@@ -49,7 +49,7 @@ struct CheckpointClearedView: View {
         if RaceSession.shared.isActive, let rank = RaceSession.shared.myRank {
             Text("You're \(ordinal(rank))")
                 .font(.headline)
-                .foregroundStyle(.indigo)
+                .foregroundStyle(QuarryTheme(colorScheme: .light).accent)
                 .animation(.spring(duration: 0.3), value: rank)
         }
     }

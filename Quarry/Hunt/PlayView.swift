@@ -21,6 +21,10 @@ import SwiftData
 extension HuntSession: Identifiable {}
 
 struct PlayView: View {
+    @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    @Environment(\.verticalSizeClass) private var verticalSizeClass
+    private var theme: QuarryTheme { QuarryTheme(colorScheme: colorScheme) }
     @Bindable var session: HuntSession
     /// Synced start time for a race. Nil for solo play (session.start() was already
     /// called by the presenter). When non-nil, a 3-2-1 countdown is shown and
@@ -43,6 +47,8 @@ struct PlayView: View {
                 playScreen
             }
         }
+        .background(theme.canvas)
+        .tint(theme.accent)
         .sensoryFeedback(.success, trigger: session.lastClearedNumber)
         .fullScreenCover(item: $cameraCheckpoint) { cp in
             VerifyCameraView(checkpoint: cp) {
@@ -106,25 +112,77 @@ struct PlayView: View {
     // MARK: Clue screen
 
     private var playScreen: some View {
-        VStack(spacing: 20) {
-            topBar
-            progressBar
-            rankPill
-            Text("Checkpoint \(session.progressText)")
-                .font(.headline)
-                .foregroundStyle(.secondary)
-            clueCard
-            Spacer()
-            Button {
-                cameraCheckpoint = session.current
-            } label: {
-                Label("Open camera", systemImage: "camera.fill")
-                    .frame(maxWidth: .infinity)
+        ScrollView {
+            VStack(alignment: .leading, spacing: QuarryTheme.sectionSpacing) {
+                topBar
+                rankPill
+                QuarryProgressView(cleared: min(session.currentIndex, session.checkpoints.count),
+                                   total: session.checkpoints.count)
+                if let cp = session.current {
+                    VStack(alignment: .leading, spacing: 20) {
+                        Label("Checkpoint \(session.progressText)", systemImage: "mappin.circle.fill")
+                            .font(.subheadline.weight(.semibold))
+                            .foregroundStyle(theme.accent)
+                        Text(cp.clue)
+                            .font(.system(.title, design: .rounded).bold())
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(24)
+                    .background(theme.card, in: .rect(cornerRadius: QuarryTheme.cardRadius))
+                    metrics
+                    Label("Point your camera at the object when you find it.", systemImage: "camera")
+                        .font(.subheadline)
+                        .foregroundStyle(theme.secondaryText)
+                        .padding(16)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .background(theme.sand, in: .rect(cornerRadius: QuarryTheme.cardRadius))
+                }
+                if inlineAction {
+                    primaryAction
+                }
             }
-            .buttonStyle(.borderedProminent)
-            .controlSize(.large)
+            .frame(maxWidth: 600, alignment: .leading)
+            .padding(20)
+            .frame(maxWidth: .infinity)
         }
-        .padding(24)
+        .safeAreaInset(edge: .bottom) {
+            if !inlineAction {
+                primaryAction
+                    .frame(maxWidth: 600)
+                    .padding(.horizontal, 20)
+                    .padding(.vertical, 12)
+                    .frame(maxWidth: .infinity)
+                    .background(theme.canvas)
+            }
+        }
+        .foregroundStyle(theme.primaryText)
+        .background(theme.canvas)
+    }
+
+    private var inlineAction: Bool {
+        dynamicTypeSize.isAccessibilitySize || verticalSizeClass == .compact
+    }
+
+    private var primaryAction: some View {
+        QuarryPrimaryButton(title: "Open camera", systemImage: "camera.fill") {
+            cameraCheckpoint = session.current
+        }
+    }
+
+    private var metrics: some View {
+        let layout = dynamicTypeSize.isAccessibilitySize
+            ? AnyLayout(VStackLayout(spacing: 12))
+            : AnyLayout(HStackLayout(alignment: .top, spacing: 12))
+        return layout {
+            QuarryMetricView(title: "Cleared",
+                             value: Text("\(min(session.currentIndex, session.checkpoints.count)) of \(session.checkpoints.count)"),
+                             systemImage: "flag.checkered")
+            QuarryMetricView(title: "Elapsed",
+                             value: Text(timerInterval: session.startDate...Date.distantFuture,
+                                         countsDown: false),
+                             systemImage: "clock")
+        }
     }
 
     private var topBar: some View {
@@ -157,48 +215,18 @@ struct PlayView: View {
         }
     }
 
-    private var progressBar: some View {
-        HStack(spacing: 6) {
-            ForEach(session.checkpoints.indices, id: \.self) { i in
-                Capsule()
-                    .fill(segmentColor(for: i))
-                    .frame(height: 6)
-                    .frame(maxWidth: .infinity)
-            }
-        }
-    }
-
     /// Rank pill shown below the progress bar during a race.
     @ViewBuilder
     private var rankPill: some View {
         if RaceSession.shared.isActive, let rank = RaceSession.shared.myRank {
             Text("You're \(ordinal(rank))")
                 .font(.caption.weight(.semibold))
-                .foregroundStyle(.white)
+                .foregroundStyle(theme.onAccent)
                 .padding(.horizontal, 10)
                 .padding(.vertical, 4)
-                .background(.indigo, in: Capsule())
+                .background(theme.accent, in: Capsule())
                 .animation(.spring(duration: 0.3), value: rank)
         }
-    }
-
-    private func segmentColor(for index: Int) -> Color {
-        if index < session.currentIndex {
-            .indigo                       // cleared
-        } else if index == session.currentIndex {
-            .indigo.opacity(0.45)         // current
-        } else {
-            Color.secondary.opacity(0.25) // upcoming
-        }
-    }
-
-    private var clueCard: some View {
-        Text(session.current?.clue ?? "")
-            .font(.title2.weight(.semibold))
-            .multilineTextAlignment(.center)
-            .frame(maxWidth: .infinity)
-            .padding(24)
-            .background(.quaternary, in: RoundedRectangle(cornerRadius: 20))
     }
 }
 
@@ -209,12 +237,12 @@ private struct RaceCountdownView: View {
 
     var body: some View {
         ZStack {
-            Color(.systemBackground)
+            QuarryTheme(colorScheme: .light).canvas
                 .ignoresSafeArea()
             VStack(spacing: 16) {
                 Text("\(count)")
                     .font(.system(size: 120, weight: .black, design: .rounded))
-                    .foregroundStyle(.indigo)
+                    .foregroundStyle(QuarryTheme(colorScheme: .light).accent)
                     .contentTransition(.numericText(countsDown: true))
                     .animation(.spring(duration: 0.35), value: count)
                 Text("Get ready!")

@@ -21,6 +21,7 @@ struct QuarryApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()   // tabs + game launcher + join links (see ContentView.swift)
+                .preferredColorScheme(.light)
         }
         .modelContainer(sharedModelContainer)
     }

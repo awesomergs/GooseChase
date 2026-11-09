@@ -8,6 +8,7 @@ import SwiftUI
 import UIKit
 
 struct CameraPicker: UIViewControllerRepresentable {
+    @Environment(\.colorScheme) private var colorScheme
     @Environment(\.dismiss) private var dismiss
     let onImage: (UIImage) -> Void
 
@@ -18,6 +19,7 @@ struct CameraPicker: UIViewControllerRepresentable {
     func makeUIViewController(context: Context) -> UIImagePickerController {
         let picker = UIImagePickerController()
         picker.delegate = context.coordinator
+        picker.view.tintColor = UIColor(QuarryTheme(colorScheme: colorScheme).accent)
         picker.sourceType = UIImagePickerController.isSourceTypeAvailable(.camera)
             ? .camera : .photoLibrary
         return picker
@@ -26,6 +28,7 @@ struct CameraPicker: UIViewControllerRepresentable {
     func updateUIViewController(_ uiViewController: UIImagePickerController, context: Context) {
         // Keep coordinator in sync with the latest environment values (e.g. dismiss action).
         context.coordinator.parent = self
+        uiViewController.view.tintColor = UIColor(QuarryTheme(colorScheme: colorScheme).accent)
     }
 
     // MARK: - Coordinator
