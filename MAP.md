@@ -28,7 +28,7 @@ One file is compiled into both targets: `Quarry/Shared/HuntActivityAttributes.sw
 | File | Owner | Contains |
 |---|---|---|
 | `Info.plist` | C | Extra Info.plist keys merged with the generated ones: `quarry://` URL scheme, `NSLocalNetworkUsageDescription`, `NSBonjourServices` (`_quarry-hunt._tcp/_udp`), `.quarryhunt` exported type + document type. Excluded from Copy Bundle Resources via a membership exception. |
-| `QuarryApp.swift` | C | `@main QuarryApp`: SwiftData `ModelContainer` with schema `[Hunt, Checkpoint]`. |
+| `QuarryApp.swift` | C | `@main QuarryApp`: SwiftData `ModelContainer` with schema `[Hunt, Checkpoint]`; app window prefers light appearance for the ivory theme regardless of system Dark Mode. |
 | `ContentView.swift` | B | `ContentView` (`NavigationStack(path: NavigationPath)` hunt list with first-checkpoint thumbnail, "+" creates a `Hunt` and pushes `HuntEditorView`, per-row Edit/Delete swipe actions; seeds demo data, ends stale Live Activities on launch; registers `navigationDestination` for both `Hunt` and `Checkpoint`); `PlayView(session:onClose:)` (clue screen, opens the camera, handles `quarry://camera`, finish state). Temporary; B may split it into `Hunt/` files. |
 | `Item.swift` | n/a | Empty placeholder. Delete. |
 
@@ -43,6 +43,13 @@ One file is compiled into both targets: `Quarry/Shared/HuntActivityAttributes.sw
 ### `Quarry/Hunt/` (B)
 | File | Contains |
 |---|---|
+| `QuarryMetricView.swift` | `QuarryMetricView(title:value:systemImage:)`: reusable adaptive fact card for hunt counts, setup readiness, and elapsed time. |
+| `QuarryProgressView.swift` | `QuarryProgressView(cleared:total:)`: actual cleared-count progress with compact segments and a fallback bar for long hunts. |
+| `QuarryTheme.swift` | `QuarryTheme(colorScheme:)`: semantic light/dark colors and reusable typography/spacing tokens from DESIGN.md. Owned by B; no shared contract changes. |
+| `QuarryCardRow.swift` | `QuarryCardRow` ViewModifier: solid rounded native List row surface, padding, and Increased Contrast outline. |
+| `QuarryPrimaryButton.swift` | `QuarryPrimaryButton(title:systemImage:action:)`: native prominent Liquid Glass button with adaptive orange tint, semantic font, and growing label. |
+| `HuntThumbnail.swift` | `HuntThumbnail(data:)`: 56 pt photo or running-goose placeholder; decorative accessibility treatment. |
+| `HuntListRow.swift` | `HuntListRow(hunt:onStart:)`: adaptive hunt summary, checkpoint setup readiness, tappable summary, explicit Details navigation and prominent Start hunt button. No stored play progress. |
 | `HuntSession.swift` | `@Observable final class HuntSession`: `hunt`, `currentIndex`, `startDate`, `isFinished`; computed `checkpoints`, `current`, `progressText`; methods `start()`, `clearCurrent()`, `quit()`. **The only caller of `LiveActivityManager`.** Made `Identifiable` in `ContentView.swift`. |
 | `DemoData.swift` | `DemoData.seedIfEmpty(_ context:)`: inserts a 3-checkpoint "Birthday Hunt" (no reference photos yet). |
 | `HuntEditorView.swift` | `HuntEditorView(hunt:path:)`: `Form` to edit a `Hunt`'s title and list its `orderedCheckpoints` (clue + thumbnail). "Add checkpoint" creates a `Checkpoint` with the next `order` and pushes `CheckpointEditorView` by appending to the shared `NavigationPath`; swipe to delete (renormalizes `order`); drag to reorder (`EditButton`); deletes the hunt on exit if it's still an untouched "New Hunt". |
@@ -98,7 +105,23 @@ One file is compiled into both targets: `Quarry/Shared/HuntActivityAttributes.sw
 | File | Purpose |
 |---|---|
 | `SPEC.md` | Scope, contracts, work split, timeline, demo, conventions, rules for agents. |
+| `DESIGN.md` | Visual design guide: ivory-white and orange semantic palette, native Apple and Liquid Glass rules, typography, components, screen layouts, and accessibility acceptance criteria; no app behavior changes. |
 | `MAP.md` | This file. |
 | `PLAN.md` | Afternoon plan (v3: joining + leaderboard): per-person tasks, agent prompts, cut order, demo script, checklist. |
 | `AGENTS.md`, `CLAUDE.md` | Point coding agents to `SPEC.md` + `MAP.md`. |
 | `README.md` | Quick team overview. |
+
+
+## App-wide appearance implementation
+
+- `Hunt/QuarryTheme.swift` supplies the adaptive ivory canvas, warm-white cards, orange accent/highlight, charcoal/warm-gray text, and verified green to all app feature views. Public signatures and shared contracts are unchanged.
+- `ContentView.swift` also contains scrollable themed active-clue and completion presentations; editor Forms and the system photo picker use the same palette.
+- `Nearby/NearbyDebugView.swift` exists and provides the DEBUG-only host/join/race testing Form and glass launcher. Production QR/HostLobby/Join views remain unimplemented.
+- `Race/LeaderboardView.swift` uses themed rows and rank badges, wrapped name/status layout, and respects Reduce Motion.
+- `Vision/CameraCaptureView.swift` retains camera/matching behavior; dark-backed controls use orange, glass Close, and green only after verification, with solid backings for Reduce Transparency.
+- `QuarryWidgets/QuarryWidgetsLiveActivity.swift` mirrors the palette in private `ActivityTheme` because it is a separate target; no project membership or shared-model changes.
+- `DESIGN.md` includes the complete existing-screen inventory and the native system-surface exceptions.
+
+- Mockup hierarchy refinement: home introduction and hunt-card badges/actions, numbered editor rows and setup metrics, staged checkpoint editor, active progress/clue/metric cards with adaptive bottom actions, and completion summary. All use existing hunt data.
+
+- Playful polish: home uses a compact “Your hunts” heading and existing running-goose artwork (`d f` image asset); the goose also appears in the empty state, photo placeholders, and completion. Repeated camera badges and promotional slogans are removed. Primary buttons use native prominent Liquid Glass.

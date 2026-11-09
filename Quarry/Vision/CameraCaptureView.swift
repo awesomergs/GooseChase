@@ -16,6 +16,9 @@ struct CameraCaptureView: View {
     var referencePrints: [Data]? = nil
     let onCaptured: (UIImage) -> Void
 
+    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
+    private let cameraTheme = QuarryTheme(colorScheme: .dark)
+
     @Environment(\.dismiss) private var dismiss
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.openURL) private var openURL
@@ -66,10 +69,11 @@ struct CameraCaptureView: View {
                     deactivate()
                     dismiss()
                 }
-                .buttonStyle(.bordered)
+                .buttonStyle(.glass)
+                .tint(cameraTheme.card)
             }
             .padding()
-            .background(.black.opacity(0.8))
+            .background(.black.opacity(reduceTransparency ? 1 : 0.8))
         }
         .safeAreaInset(edge: .bottom) {
             VStack(spacing: 12) {
@@ -101,12 +105,15 @@ struct CameraCaptureView: View {
                         ZStack {
                             Circle().stroke(.gray, lineWidth: 6)
                             Circle().trim(from: 0, to: matchScore)
-                                .stroke(matchScore >= matchThreshold ? Color.green : (matchScore >= 0.5 ? .yellow : .gray),
+                                .stroke(didClear ? cameraTheme.verified : cameraTheme.primaryText,
                                         style: StrokeStyle(lineWidth: 6, lineCap: .round))
                                 .rotationEffect(.degrees(-90))
                                 .animation(reduceMotion ? nil : .easeOut(duration: 0.2), value: matchScore)
-                            Image(systemName: "camera.fill").font(.title)
+                            Image(systemName: didClear ? "checkmark" : "camera.fill")
+                                .font(.title)
+                                .foregroundStyle(cameraTheme.primaryText)
                         }
+                        .background(.black, in: .circle)
                         .frame(width: 72, height: 72)
                         .padding(6)
                     } else {
@@ -115,15 +122,16 @@ struct CameraCaptureView: View {
                             .frame(maxWidth: .infinity, minHeight: 44)
                     }
                 }
+                .foregroundStyle(cameraTheme.onAccent)
                 .buttonStyle(.borderedProminent)
                 .accessibilityLabel(isCapturing ? "Verifying photo" : "Take photo")
                 .disabled(!isReady || isCapturing || scenePhase != .active || didClear || referencePrints?.isEmpty == true)
             }
             .padding()
-            .background(.black.opacity(0.8))
+            .background(.black.opacity(reduceTransparency ? 1 : 0.8))
         }
         .foregroundStyle(.white)
-        .tint(.indigo)
+        .tint(cameraTheme.accent)
         .sensoryFeedback(.success, trigger: didClear)
         .sensoryFeedback(.error, trigger: errorFeedback)
         .task(id: generation) { await monitorMatch() }
@@ -293,6 +301,8 @@ struct CameraCaptureView: View {
 }
 
 private struct CameraStatusView: View {
+    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
+    private let theme = QuarryTheme(colorScheme: .dark)
     let status: String
     let accessDenied: Bool
     let openSettings: () -> Void
@@ -304,6 +314,7 @@ private struct CameraStatusView: View {
             Text(status).multilineTextAlignment(.center)
             if accessDenied {
                 Button("Open Settings", action: openSettings)
+                    .foregroundStyle(theme.onAccent)
                     .buttonStyle(.borderedProminent)
             } else {
                 Button("Try again", action: retry)
@@ -311,7 +322,9 @@ private struct CameraStatusView: View {
             }
         }
         .padding()
-        .background(.black.opacity(0.8), in: RoundedRectangle(cornerRadius: 16))
+        .foregroundStyle(theme.primaryText)
+        .tint(theme.accent)
+        .background(.black.opacity(reduceTransparency ? 1 : 0.8), in: RoundedRectangle(cornerRadius: 16))
         .padding()
     }
 }

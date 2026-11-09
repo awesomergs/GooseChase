@@ -8,24 +8,57 @@ import SwiftUI
 import SwiftData
 
 struct HuntEditorView: View {
+    @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    private var theme: QuarryTheme { QuarryTheme(colorScheme: colorScheme) }
     @Bindable var hunt: Hunt
     @Binding var path: NavigationPath
     @Environment(\.modelContext) private var context
 
     var body: some View {
         Form {
-            Section("Title") {
-                TextField("Hunt title", text: $hunt.title)
+            Section {
+                let layout = dynamicTypeSize.isAccessibilitySize
+                    ? AnyLayout(VStackLayout(spacing: 12))
+                    : AnyLayout(HStackLayout(alignment: .top, spacing: 12))
+                layout {
+                    QuarryMetricView(title: "Checkpoints", value: Text("\(hunt.checkpoints.count)"), systemImage: "flag")
+                    QuarryMetricView(title: "Ready to play",
+                                     value: Text("\(hunt.checkpoints.count(where: \.isReady)) of \(hunt.checkpoints.count)"),
+                                     systemImage: "camera")
+                }
+                .listRowInsets(EdgeInsets())
+                .listRowBackground(Color.clear)
             }
+
+            Section("Hunt name") {
+                TextField("Hunt title", text: $hunt.title, axis: .vertical)
+                    .font(.system(.title2, design: .rounded).bold())
+                    .padding(.vertical, 8)
+            }
+            .listRowBackground(theme.card)
 
             Section("Checkpoints") {
                 ForEach(hunt.orderedCheckpoints) { cp in
                     NavigationLink(value: cp) {
                         HStack(spacing: 12) {
+                            Text(cp.order + 1, format: .number)
+                                .font(.headline.monospacedDigit())
+                                .foregroundStyle(theme.primaryText)
+                                .frame(minWidth: 32, minHeight: 32)
+                                .background(theme.sand, in: .circle)
+                                .accessibilityLabel("Checkpoint \(cp.order + 1)")
                             thumbnail(for: cp.thumbnail)
-                            Text(cp.clue.isEmpty ? "New checkpoint" : cp.clue)
-                                .foregroundStyle(cp.clue.isEmpty ? .secondary : .primary)
-                                .lineLimit(2)
+                            VStack(alignment: .leading, spacing: 6) {
+                                Text(cp.clue.isEmpty ? "New checkpoint" : cp.clue)
+                                    .font(.headline)
+                                    .foregroundStyle(cp.clue.isEmpty ? theme.secondaryText : theme.primaryText)
+                                    .fixedSize(horizontal: false, vertical: true)
+                                Label(cp.isReady ? "Ready to play" : "Needs reference photos",
+                                      systemImage: cp.isReady ? "camera.fill" : "camera.badge.ellipsis")
+                                    .font(.subheadline)
+                                    .foregroundStyle(theme.secondaryText)
+                            }
                         }
                     }
                 }
@@ -38,8 +71,13 @@ struct HuntEditorView: View {
                     Label("Add checkpoint", systemImage: "plus")
                 }
             }
+            .listRowBackground(theme.card)
         }
-        .navigationTitle("Edit Hunt")
+        .scrollContentBackground(.hidden)
+        .background(theme.canvas)
+        .foregroundStyle(theme.primaryText)
+        .tint(theme.accent)
+        .navigationTitle("Hunt details")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) { EditButton() }
@@ -92,9 +130,9 @@ struct HuntEditorView: View {
                 .clipShape(RoundedRectangle(cornerRadius: 8))
         } else {
             Image(systemName: "photo")
-                .foregroundStyle(.secondary)
+                .foregroundStyle(theme.secondaryText)
                 .frame(width: 44, height: 44)
-                .background(.quaternary, in: RoundedRectangle(cornerRadius: 8))
+                .background(theme.sand, in: RoundedRectangle(cornerRadius: 8))
         }
     }
 }

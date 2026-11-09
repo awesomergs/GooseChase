@@ -24,6 +24,7 @@ struct QuarryApp: App {
                 #if DEBUG
                 .overlay(alignment: .bottomLeading) { NearbyDebugButton() }   // temporary: N2 test
                 #endif
+                .preferredColorScheme(.light)
         }
         .modelContainer(sharedModelContainer)
     }

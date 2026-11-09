@@ -9,6 +9,8 @@ import SwiftData
 import SwiftUI
 
 struct NearbyDebugView: View {
+    @Environment(\.colorScheme) private var colorScheme
+    private var theme: QuarryTheme { QuarryTheme(colorScheme: colorScheme) }
     @Query(sort: \Hunt.createdAt) private var hunts: [Hunt]
     @State private var code = ""
     @State private var name = PlayerIdentity.name
@@ -26,6 +28,7 @@ struct NearbyDebugView: View {
                         LabeledContent("Room code", value: roomCode)
                     }
                 }
+                .listRowBackground(theme.card)
 
                 Section("Host") {
                     ForEach(hunts) { hunt in
@@ -47,6 +50,7 @@ struct NearbyDebugView: View {
                         }
                     }
                 }
+                .listRowBackground(theme.card)
 
                 Section("Join") {
                     TextField("4-letter code", text: $code)
@@ -70,6 +74,7 @@ struct NearbyDebugView: View {
                         }
                     }
                 }
+                .listRowBackground(theme.card)
 
                 Section("Race") {
                     Button("Report +1 cleared") {
@@ -79,6 +84,7 @@ struct NearbyDebugView: View {
                     .disabled(!race.isActive)
                     NavigationLink("Leaderboard") { LeaderboardView() }
                 }
+                .listRowBackground(theme.card)
 
                 Section {
                     Button("Stop everything", role: .destructive) {
@@ -86,7 +92,12 @@ struct NearbyDebugView: View {
                         race.end()
                     }
                 }
+                .listRowBackground(theme.card)
             }
+            .scrollContentBackground(.hidden)
+            .background(theme.canvas)
+            .foregroundStyle(theme.primaryText)
+            .tint(theme.accent)
             .navigationTitle("Nearby test")
         }
     }
@@ -111,6 +122,7 @@ struct NearbyDebugView: View {
 
 /// Small floating button that opens the debug screen. Added in QuarryApp (DEBUG only).
 struct NearbyDebugButton: View {
+    @Environment(\.colorScheme) private var colorScheme
     @State private var showing = false
     var body: some View {
         Button {
@@ -120,6 +132,7 @@ struct NearbyDebugButton: View {
                 .padding(10)
         }
         .buttonStyle(.glass)
+        .tint(QuarryTheme(colorScheme: colorScheme).accent)
         .accessibilityLabel("Nearby test")
         .padding()
         .sheet(isPresented: $showing) { NearbyDebugView() }
