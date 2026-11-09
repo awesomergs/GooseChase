@@ -175,33 +175,81 @@ struct LockScreenHuntView: View {
         }
         .fontDesign(.rounded)
         .foregroundStyle(.white)
-        .activityBackgroundTint(family == .small ? .black : (successful ? grass : sky))
+        // No tint on Apple Watch: a tint there removes the Smart Stack's glass and hurts
+        // readability, so the watch layout draws its own sky instead (see watchLayout).
+        .activityBackgroundTint(family == .small ? nil : (successful ? grass : sky))
     }
 
+    /// Apple Watch Smart Stack: a small sky scene. Status + timer on top, the clue big enough
+    /// to read at a glance, and the goose standing on the grass with progress dots beside it.
     private var watchLayout: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack(spacing: 6) {
-                ActivityMascot(state: context.state)
-                    .frame(width: 32, height: 27)
-                Text("\(progress.current) of \(progress.total)")
-                    .font(.headline)
+        VStack(alignment: .leading, spacing: 3) {
+            HStack(spacing: 4) {
+                Text(watchStatus)
+                    .font(.caption2.weight(.heavy))
+                    .opacity(0.9)
+                    .lineLimit(1)
                 Spacer(minLength: 0)
                 ElapsedTimer(start: context.attributes.startDate, end: context.state.finishedAt)
-                    .font(.caption.weight(.bold))
-                    .frame(width: 62, alignment: .trailing)
+                    .font(.caption2.weight(.bold).monospacedDigit())
+                    .frame(width: 46, alignment: .trailing)
             }
-            if context.state.finishedAt != nil {
-                Label("Hunt complete!", systemImage: "checkmark.circle.fill")
-                    .font(.headline)
-            } else if context.state.justCleared {
-                Text("Checkpoint cleared!").font(.headline)
-            } else {
-                Text(context.state.clue)
-                    .font(.caption)
-                    .lineLimit(2)
+
+            Group {
+                if context.state.finishedAt != nil {
+                    Text("Hunt complete! 🎉")
+                } else if context.state.justCleared {
+                    Text("Honk! Checkpoint cleared")
+                } else {
+                    Text(context.state.clue)
+                }
+            }
+            .font(.footnote.weight(.semibold))
+            .lineLimit(2)
+            .minimumScaleFactor(0.8)
+            .frame(maxWidth: .infinity, alignment: .leading)
+
+            HStack(alignment: .bottom, spacing: 6) {
+                ActivityMascot(state: context.state)
+                    .frame(width: 46, height: 38)
+                    .padding(.bottom, 5)      // feet on the grass line
+                Spacer(minLength: 0)
+                if progress.total <= 8 {
+                    HStack(spacing: 3) {
+                        ForEach(1...progress.total, id: \.self) { checkpoint in
+                            Capsule()
+                                .fill(.white.opacity(progress.isDone(checkpoint) ? 1 : 0.35))
+                                .frame(width: 9, height: 5)
+                        }
+                    }
+                    .padding(.bottom, 16)
+                    .accessibilityElement(children: .ignore)
+                    .accessibilityLabel("\(progress.cleared) of \(progress.total) checkpoints cleared")
+                }
             }
         }
-        .padding(12)
+        .padding(.horizontal, 12)
+        .padding(.top, 10)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background {
+            LinearGradient(
+                colors: successful
+                    ? [Color(red: 0.20, green: 0.53, blue: 0.29), grass]
+                    : [Color(red: 0.16, green: 0.48, blue: 0.71), sky],
+                startPoint: .top, endPoint: .bottom
+            )
+            .overlay(alignment: .bottom) {
+                ActivityGrass()
+                    .fill(successful ? Color(red: 0.20, green: 0.53, blue: 0.29) : grass)
+                    .frame(height: 16)
+            }
+            .clipShape(ContainerRelativeShape())
+        }
+    }
+
+    private var watchStatus: String {
+        if context.state.finishedAt != nil { return "FINISHED" }
+        return "CHECKPOINT \(progress.current) OF \(progress.total)"
     }
 
     private var phoneLayout: some View {
