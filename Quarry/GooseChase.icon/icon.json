@@ -1,23 +1,61 @@
 {
-  "fill" : {
-    "linear-gradient" : [
-      "display-p3:0.95294,0.84314,0.67843,1.00000",
-      "srgb:0.72549,0.55294,0.40392,1.00000"
-    ]
-  },
+  "fill-specializations" : [
+    {
+      "value" : {
+        "linear-gradient" : [
+          "display-p3:0.24706,0.63529,0.87843,1.00000",
+          "srgb:0.35686,0.72157,0.92549,1.00000"
+        ]
+      }
+    },
+    {
+      "appearance" : "dark",
+      "value" : {
+        "linear-gradient" : [
+          "display-p3:0.09020,0.24706,0.38824,1.00000",
+          "srgb:0.17255,0.49020,0.70588,1.00000"
+        ]
+      }
+    }
+  ],
   "groups" : [
     {
       "layers" : [
         {
-          "image-name" : "d f.png",
-          "name" : "d f",
-          "position" : {
-            "scale" : 1,
-            "translation-in-points" : [
-              70,
-              -21
-            ]
-          }
+          "image-name" : "4b_brackets 3.png",
+          "name" : "4b_brackets 3"
+        },
+        {
+          "image-name" : "4a_speed_lines 3.png",
+          "name" : "4a_speed_lines 3"
+        },
+        {
+          "image-name" : "3c_eye 3.png",
+          "name" : "3c_eye 3"
+        },
+        {
+          "image-name" : "3b_legs_feet 3.png",
+          "name" : "3b_legs_feet 3"
+        },
+        {
+          "image-name" : "3a_beak 3.png",
+          "name" : "3a_beak 3"
+        },
+        {
+          "image-name" : "2c_wing 3.png",
+          "name" : "2c_wing 3"
+        },
+        {
+          "image-name" : "2b_belly_shade 3.png",
+          "name" : "2b_belly_shade 3"
+        },
+        {
+          "image-name" : "2a_goose_body 3.png",
+          "name" : "2a_goose_body 3"
+        },
+        {
+          "image-name" : "1_grass 3.png",
+          "name" : "1_grass 3"
         }
       ],
       "shadow" : {
@@ -26,7 +64,7 @@
       },
       "translucency" : {
         "enabled" : true,
-        "value" : 0.3
+        "value" : 0.5
       }
     }
   ],

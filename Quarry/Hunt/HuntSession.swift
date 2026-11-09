@@ -45,6 +45,7 @@ final class HuntSession {
         isFinished = false
         splits = []
         lastClearedNumber = 0
+        HuntSession.active = self   // for Siri ("What's my clue?")
         LiveActivityManager.shared.start(
             huntTitle: hunt.title,
             totalCheckpoints: checkpoints.count,
@@ -94,6 +95,7 @@ final class HuntSession {
             Task { await LiveActivityManager.shared.advance(to: currentIndex + 1, clue: next.clue) }
         } else {
             isFinished = true
+            HuntSession.active = nil
             Task { await LiveActivityManager.shared.end() }
         }
     }
@@ -102,6 +104,7 @@ final class HuntSession {
         advanceTask?.cancel()
         advanceTask = nil
         isAwaitingAdvance = false
+        HuntSession.active = nil
         Task { await LiveActivityManager.shared.end(finalMessage: "Hunt ended") }
     }
 }
