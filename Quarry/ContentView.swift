@@ -33,10 +33,13 @@ struct ContentView: View {
                 CreateTab(onPlay: { hunt in launch(hunt, nil) })
             }
         }
+        .tint(Brand.sky)
+        .fontDesign(.rounded)
         .fullScreenCover(item: $game) { launch in
             PlayView(session: launch.session, startAt: launch.startAt) {
                 finish(launch)
             }
+            .tint(Brand.sky)
         }
         // AirDrop / Messages: a .quarryhunt file was opened
         .sheet(item: $incomingPackage) { incoming in
@@ -104,9 +107,9 @@ func huntThumbnail(_ data: Data?, size: CGFloat = 44) -> some View {
             .clipShape(RoundedRectangle(cornerRadius: size * 0.2))
     } else {
         Image(systemName: "flag.fill")
-            .foregroundStyle(QuarryTheme(colorScheme: .light).accent)
+            .foregroundStyle(Brand.sky)
             .frame(width: size, height: size)
-            .background(QuarryTheme(colorScheme: .light).sand, in: RoundedRectangle(cornerRadius: size * 0.2))
+            .background(Brand.sky.opacity(0.15), in: RoundedRectangle(cornerRadius: size * 0.2))
     }
 }
 
@@ -127,9 +130,8 @@ private struct ImportHuntSheet: View {
         NavigationStack {
             VStack(spacing: 16) {
                 Spacer()
-                Image(systemName: "flag.fill")
-                    .font(.system(size: 56))
-                    .foregroundStyle(QuarryTheme(colorScheme: .light).accent)
+                GooseView(mood: .honk)
+                    .frame(height: 110)
                 Text("Join \"\(package.title)\"?")
                     .font(.title2.bold())
                     .multilineTextAlignment(.center)

@@ -74,6 +74,7 @@ struct PlayView: View {
             }
         }
         .task { await runCountdown() }
+        .fontDesign(.rounded)
     }
 
     // MARK: Countdown
@@ -112,77 +113,33 @@ struct PlayView: View {
     // MARK: Clue screen
 
     private var playScreen: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: QuarryTheme.sectionSpacing) {
-                topBar
-                rankPill
-                QuarryProgressView(cleared: min(session.currentIndex, session.checkpoints.count),
-                                   total: session.checkpoints.count)
-                if let cp = session.current {
-                    VStack(alignment: .leading, spacing: 20) {
-                        Label("Checkpoint \(session.progressText)", systemImage: "mappin.circle.fill")
-                            .font(.subheadline.weight(.semibold))
-                            .foregroundStyle(theme.accent)
-                        Text(cp.clue)
-                            .font(.system(.title, design: .rounded).bold())
-                            .fixedSize(horizontal: false, vertical: true)
-                    }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(24)
-                    .background(theme.card, in: .rect(cornerRadius: QuarryTheme.cardRadius))
-                    metrics
-                    Label("Point your camera at the object when you find it.", systemImage: "camera")
-                        .font(.subheadline)
-                        .foregroundStyle(theme.secondaryText)
-                        .padding(16)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .background(theme.sand, in: .rect(cornerRadius: QuarryTheme.cardRadius))
-                }
-                if inlineAction {
-                    primaryAction
-                }
+        VStack(spacing: 18) {
+            topBar
+            progressBar
+            rankPill
+            Text("Checkpoint \(session.progressText)")
+                .font(.headline)
+                .foregroundStyle(.white.opacity(0.9))
+            clueCard
+            Spacer()
+            HStack {
+                GooseView(mood: .waiting)
+                    .frame(height: 96)
+                Spacer()
             }
-            .frame(maxWidth: 600, alignment: .leading)
-            .padding(20)
-            .frame(maxWidth: .infinity)
-        }
-        .safeAreaInset(edge: .bottom) {
-            if !inlineAction {
-                primaryAction
-                    .frame(maxWidth: 600)
-                    .padding(.horizontal, 20)
-                    .padding(.vertical, 12)
+            Button {
+                cameraCheckpoint = session.current
+            } label: {
+                Label("Snap it", systemImage: "camera.fill")
+                    .font(.headline)
                     .frame(maxWidth: .infinity)
                     .background(theme.canvas)
             }
+            .gooseProminent()
         }
-        .foregroundStyle(theme.primaryText)
-        .background(theme.canvas)
-    }
-
-    private var inlineAction: Bool {
-        dynamicTypeSize.isAccessibilitySize || verticalSizeClass == .compact
-    }
-
-    private var primaryAction: some View {
-        QuarryPrimaryButton(title: "Open camera", systemImage: "camera.fill") {
-            cameraCheckpoint = session.current
-        }
-    }
-
-    private var metrics: some View {
-        let layout = dynamicTypeSize.isAccessibilitySize
-            ? AnyLayout(VStackLayout(spacing: 12))
-            : AnyLayout(HStackLayout(alignment: .top, spacing: 12))
-        return layout {
-            QuarryMetricView(title: "Cleared",
-                             value: Text("\(min(session.currentIndex, session.checkpoints.count)) of \(session.checkpoints.count)"),
-                             systemImage: "flag.checkered")
-            QuarryMetricView(title: "Elapsed",
-                             value: Text(timerInterval: session.startDate...Date.distantFuture,
-                                         countsDown: false),
-                             systemImage: "clock")
-        }
+        .padding(24)
+        .foregroundStyle(.white)
+        .background(SkyBackground(grassHeight: 150))
     }
 
     private var topBar: some View {
@@ -193,14 +150,19 @@ struct PlayView: View {
             } label: {
                 Image(systemName: "xmark")
                     .font(.headline)
+                    .frame(width: 22, height: 22)
             }
+            .buttonStyle(.glass)
+            .buttonBorderShape(.circle)
             .accessibilityLabel("End hunt")
 
             Spacer()
 
             Text(session.startDate, style: .timer)
                 .font(.headline.monospacedDigit())
-                .foregroundStyle(.secondary)
+                .padding(.horizontal, 14)
+                .padding(.vertical, 8)
+                .glassEffect(.regular, in: Capsule())
 
             if RaceSession.shared.isActive {
                 Button {
@@ -209,10 +171,23 @@ struct PlayView: View {
                     Image(systemName: "list.number")
                         .font(.headline)
                 }
-                .padding(.leading, 12)
+                .buttonStyle(.glass)
+                .padding(.leading, 8)
                 .accessibilityLabel("Leaderboard")
             }
         }
+    }
+
+    private var progressBar: some View {
+        HStack(spacing: 6) {
+            ForEach(session.checkpoints.indices, id: \.self) { i in
+                Capsule()
+                    .fill(segmentColor(for: i))
+                    .frame(height: 7)
+                    .frame(maxWidth: .infinity)
+            }
+        }
+        .animation(.spring(duration: 0.4), value: session.currentIndex)
     }
 
     /// Rank pill shown below the progress bar during a race.
@@ -224,9 +199,31 @@ struct PlayView: View {
                 .foregroundStyle(theme.onAccent)
                 .padding(.horizontal, 10)
                 .padding(.vertical, 4)
-                .background(theme.accent, in: Capsule())
+                .background(Brand.orange, in: Capsule())
                 .animation(.spring(duration: 0.3), value: rank)
         }
+    }
+
+    private func segmentColor(for index: Int) -> Color {
+        if index < session.currentIndex {
+            Brand.grass                  // cleared
+        } else if index == session.currentIndex {
+            .white                       // current
+        } else {
+            .white.opacity(0.3)          // upcoming
+        }
+    }
+
+    private var clueCard: some View {
+        VStack(spacing: 8) {
+            Text("Clue")
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(.white.opacity(0.85))
+            Text(session.current?.clue ?? "")
+                .font(.title2.weight(.bold))
+                .multilineTextAlignment(.center)
+        }
+        .skyCard()
     }
 }
 
@@ -237,19 +234,22 @@ private struct RaceCountdownView: View {
 
     var body: some View {
         ZStack {
-            QuarryTheme(colorScheme: .light).canvas
-                .ignoresSafeArea()
-            VStack(spacing: 16) {
+            SkyBackground(grassHeight: 120)
+            VStack(spacing: 12) {
                 Text("\(count)")
-                    .font(.system(size: 120, weight: .black, design: .rounded))
-                    .foregroundStyle(QuarryTheme(colorScheme: .light).accent)
+                    .font(.system(size: 130, weight: .black, design: .rounded))
+                    .foregroundStyle(.white)
                     .contentTransition(.numericText(countsDown: true))
                     .animation(.spring(duration: 0.35), value: count)
                 Text("Get ready!")
-                    .font(.title2.weight(.semibold))
-                    .foregroundStyle(.secondary)
+                    .font(.title2.weight(.bold))
+                    .foregroundStyle(.white)
+                GooseView(mood: .running)
+                    .frame(height: 110)
+                    .padding(.top, 24)
             }
         }
+        .sensoryFeedback(.impact(weight: .medium), trigger: count)
     }
 }
 

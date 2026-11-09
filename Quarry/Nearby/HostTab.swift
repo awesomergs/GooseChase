@@ -55,16 +55,20 @@ struct HostTab: View {
             .overlay {
                 if playable.isEmpty {
                     ContentUnavailableView {
-                        Label("Nothing to host yet", systemImage: "dot.radiowaves.left.and.right")
+                        VStack(spacing: 8) {
+                            GooseView(mood: .waiting)
+                                .frame(height: 110)
+                            Text("Nothing to host yet")
+                        }
                     } description: {
                         Text("Create a hunt with photos for each checkpoint, then host it here.")
                     } actions: {
                         Button("Create a hunt", action: onCreateHunt)
-                            .buttonStyle(.borderedProminent)
+                            .gooseProminent()
                     }
-                    .background(Color(.systemGroupedBackground))
                 }
             }
+            .pageBackground()
             .navigationTitle("Host a Game")
             .sheet(item: $lobbyHunt) { hunt in
                 HostLobbyView(hunt: hunt) { date in

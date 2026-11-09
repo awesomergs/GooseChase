@@ -14,22 +14,18 @@ struct HuntFinishedView: View {
     private let columns = [GridItem(.adaptive(minimum: 90), spacing: 12)]
 
     var body: some View {
-        VStack(spacing: 20) {
-            Image("d f")
-                .resizable()
-                .scaledToFit()
-                .frame(width: 140, height: 140)
-                .rotationEffect(.degrees(-8))
-                .accessibilityHidden(true)
+        VStack(spacing: 16) {
+            GooseView(mood: .celebrate)
+                .frame(height: 120)
             Text("Hunt complete!")
                 .font(.largeTitle.bold())
-            Label(mmss(session.totalTime), systemImage: "stopwatch")
-                .font(.title2.monospacedDigit())
-                .foregroundStyle(.secondary)
+            Text(mmss(session.totalTime))
+                .font(.system(size: 56, weight: .heavy, design: .rounded).monospacedDigit())
+                .contentTransition(.numericText())
 
             ScrollView {
                 splitTimes
-                    .padding(.top, 8)
+                    .skyCard(cornerRadius: 20)
 
                 if RaceSession.shared.isActive {
                     LeaderboardView()
@@ -41,20 +37,24 @@ struct HuntFinishedView: View {
                             thumbnail(for: cp.thumbnail)
                         }
                     }
-                    .padding(.top, 8)
+                    .padding(.top, 12)
                 }
             }
+            .scrollIndicators(.hidden)
 
             Button {
                 onDone()
             } label: {
                 Text("Done")
+                    .font(.headline)
                     .frame(maxWidth: .infinity)
             }
-            .buttonStyle(.glassProminent)
-            .controlSize(.large)
+            .gooseProminent()
         }
         .padding(24)
+        .foregroundStyle(.white)
+        .background(SkyBackground(grassHeight: 100))
+        .fontDesign(.rounded)
     }
 
     /// A row per checkpoint with the time spent on it.
@@ -62,8 +62,9 @@ struct HuntFinishedView: View {
         VStack(spacing: 8) {
             ForEach(Array(session.checkpoints.enumerated()), id: \.element.id) { index, _ in
                 HStack {
-                    Text("Checkpoint \(index + 1)")
-                        .foregroundStyle(.secondary)
+                    Label("Checkpoint \(index + 1)", systemImage: "checkmark.circle.fill")
+                        .symbolRenderingMode(.palette)
+                        .foregroundStyle(.white, Brand.grass)
                     Spacer()
                     if session.splits.indices.contains(index) {
                         Text(mmss(session.splits[index]))
@@ -82,12 +83,12 @@ struct HuntFinishedView: View {
                 .resizable()
                 .scaledToFill()
                 .frame(width: 90, height: 90)
-                .clipShape(RoundedRectangle(cornerRadius: 12))
+                .clipShape(RoundedRectangle(cornerRadius: 16))
+                .overlay(RoundedRectangle(cornerRadius: 16).stroke(.white, lineWidth: 3))
         } else {
             Image(systemName: "photo")
-                .foregroundStyle(.secondary)
                 .frame(width: 90, height: 90)
-                .background(.quaternary, in: RoundedRectangle(cornerRadius: 12))
+                .glassEffect(.regular, in: RoundedRectangle(cornerRadius: 16))
         }
     }
 }

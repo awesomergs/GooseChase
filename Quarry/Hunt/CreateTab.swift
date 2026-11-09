@@ -93,24 +93,21 @@ struct CreateTab: View {
             .overlay {
                 if hunts.isEmpty {
                     ContentUnavailableView {
-                        Image("d f")
-                            .resizable()
-                            .scaledToFit()
-                            .frame(width: 120, height: 120)
-                            .accessibilityHidden(true)
-                        Text("No hunts yet")
+                        VStack(spacing: 8) {
+                            GooseView(mood: .waiting)
+                                .frame(height: 110)
+                            Text("No hunts yet")
+                        }
                     } description: {
                         Text("Snap a few photos of hidden things and write clues to make your first hunt.")
                     } actions: {
-                        QuarryPrimaryButton(title: "Create hunt", systemImage: "plus", action: newHunt)
+                        Button("New hunt", action: newHunt)
+                            .gooseProminent()
                     }
                 }
             }
-            .navigationTitle("Quarry")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbarBackground(theme.accent, for: .navigationBar)
-            .toolbarBackgroundVisibility(.visible, for: .navigationBar)
-            .toolbarColorScheme(.light, for: .navigationBar)
+            .pageBackground()
+            .navigationTitle("My Hunts")
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button("New hunt", systemImage: "plus", action: newHunt)

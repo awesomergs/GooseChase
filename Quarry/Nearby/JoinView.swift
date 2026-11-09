@@ -39,9 +39,11 @@ struct JoinTab: View {
                     lobby(lobbyHunt)
                 } else {
                     entryForm
+                        .pageBackground()
                 }
             }
-            .navigationTitle(lobbyHunt == nil ? "Join a Game" : "Lobby")
+            .navigationTitle(lobbyHunt == nil ? "Join a Game" : "")
+            .navigationBarTitleDisplayMode(lobbyHunt == nil ? .large : .inline)
             .toolbar {
                 if lobbyHunt != nil {
                     ToolbarItem(placement: .cancellationAction) {
@@ -86,6 +88,12 @@ struct JoinTab: View {
     private var entryForm: some View {
         Form {
             Section {
+                hero
+                    .listRowInsets(EdgeInsets())
+                    .listRowBackground(SkyCardBackground())
+            }
+
+            Section {
                 TextField("Your name", text: $name)
                     .textContentType(.givenName)
                     .submitLabel(.next)
@@ -104,11 +112,11 @@ struct JoinTab: View {
                         .font(.headline)
                         .frame(maxWidth: .infinity, minHeight: 44)
                 }
-                .buttonStyle(.borderedProminent)
+                .gooseProminent()
                 .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
 
                 TextField("ABCD", text: $code)
-                    .font(.system(.title, design: .monospaced).weight(.bold))
+                    .font(.system(.title, design: .rounded, weight: .heavy))
                     .kerning(6)
                     .multilineTextAlignment(.center)
                     .textInputAutocapitalization(.characters)
@@ -126,7 +134,7 @@ struct JoinTab: View {
                 Text("Scan the QR on the host's screen, or type their 4-letter code. Stay close to their phone.")
             }
 
-            if nearby.status != .idle {
+            if nearby.status != .idle && nearby.status != .hosting {
                 Section { statusRow }
             }
 
@@ -150,6 +158,29 @@ struct JoinTab: View {
                 }
             }
         }
+    }
+
+    /// Sky banner at the top of the form; the goose runs while we look for the host.
+    private var hero: some View {
+        HStack(alignment: .bottom, spacing: 8) {
+            VStack(alignment: .leading, spacing: 4) {
+                Text(isBusy ? "On our way…" : "Ready to chase?")
+                    .font(.title2.bold())
+                    .contentTransition(.opacity)
+                Text(isBusy ? "Finding the host's phone." : "Find it. Snap it. Honk.")
+                    .font(.subheadline.weight(.medium))
+                    .opacity(0.9)
+            }
+            .foregroundStyle(.white)
+            .padding(.bottom, 26)
+            Spacer(minLength: 0)
+            GooseView(mood: isBusy ? .running : .waiting)
+                .frame(height: 96)
+                .padding(.bottom, 4)
+        }
+        .padding(.horizontal, 18)
+        .padding(.top, 14)
+        .animation(.easeInOut, value: isBusy)
     }
 
     @ViewBuilder
@@ -181,18 +212,17 @@ struct JoinTab: View {
     private func lobby(_ hunt: Hunt) -> some View {
         let hostName = nearby.hostName ?? (hunt.hostName.isEmpty ? "the host" : hunt.hostName)
         let connected = nearby.status == .connected
-        return VStack(spacing: 20) {
+        return VStack(spacing: 18) {
             Spacer()
-            Image(systemName: "checkmark.circle.fill")
-                .font(.system(size: 72))
-                .foregroundStyle(.green)
+            GooseView(mood: connected ? .waiting : .honk)
+                .frame(height: 140)
             VStack(spacing: 6) {
                 Text("You're in!")
                     .font(.largeTitle.bold())
                 Text(hunt.title)
                     .font(.title3.weight(.semibold))
                 Text("\(hunt.checkpoints.count) checkpoints · hosted by \(hostName)")
-                    .foregroundStyle(.secondary)
+                    .opacity(0.9)
             }
             .multilineTextAlignment(.center)
 
@@ -201,17 +231,16 @@ struct JoinTab: View {
             if connected {
                 HStack(spacing: 10) {
                     ProgressView()
+                        .tint(.white)
                     Text("Waiting for \(hostName) to start…")
                         .font(.headline)
                 }
-                .padding()
-                .frame(maxWidth: .infinity)
-                .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 16))
+                .skyCard(cornerRadius: 20)
             } else {
                 // Safety net: the connection dropped, but we already have the hunt.
                 VStack(spacing: 12) {
                     Label("Lost connection to \(hostName)", systemImage: "wifi.exclamationmark")
-                        .foregroundStyle(.orange)
+                        .font(.headline)
                     Button {
                         lobbyHunt = nil
                         nearby.stop()
@@ -221,15 +250,18 @@ struct JoinTab: View {
                             .font(.headline)
                             .frame(maxWidth: .infinity)
                     }
-                    .buttonStyle(.borderedProminent)
-                    .controlSize(.large)
+                    .gooseProminent()
                     Text("You have the hunt, so you can play without waiting.")
                         .font(.footnote)
-                        .foregroundStyle(.secondary)
+                        .opacity(0.9)
                 }
             }
         }
         .padding()
+        .padding(.bottom, 12)
+        .foregroundStyle(.white)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(SkyBackground(grassHeight: 90))
         .animation(.default, value: connected)
     }
 
@@ -284,7 +316,7 @@ private struct GameRow: View {
             Spacer()
             Image(systemName: "play.circle.fill")
                 .font(.title2)
-                .foregroundStyle(.indigo)
+                .foregroundStyle(Brand.orange)
                 .accessibilityHidden(true)
         }
         .padding(.vertical, 2)
