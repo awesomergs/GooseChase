@@ -17,11 +17,14 @@ struct CheckpointEditorView: View {
     @State private var errorMessage: String?
     @State private var showingPicker = false
 
+    @FocusState private var isEditingText: Bool
+
     var body: some View {
         Form {
             // MARK: Clue
             Section("01 · Write the clue") {
                 TextField("Describe what to find", text: $checkpoint.clue, axis: .vertical)
+                    .focused($isEditingText)
                     .lineLimit(3...6)
                     .font(.system(.title3, design: .rounded).weight(.semibold))
                     .padding(.vertical, 8)
@@ -75,6 +78,7 @@ struct CheckpointEditorView: View {
                     }
                 } else if checkpoint.referencePrints.count < 3 {
                     Button {
+                        isEditingText = false
                         showingPicker = true
                     } label: {
                         Label(
@@ -99,6 +103,16 @@ struct CheckpointEditorView: View {
             }
             .listRowBackground(theme.card)
         }
+        .scrollDismissesKeyboard(.interactively)
+        .toolbar {
+            ToolbarItemGroup(placement: .keyboard) {
+                if isEditingText {
+                    Spacer()
+                    Button("Done") { isEditingText = false }
+                }
+            }
+        }
+        .onDisappear { isEditingText = false }
         .scrollContentBackground(.hidden)
         .background(theme.canvas)
         .foregroundStyle(theme.primaryText)

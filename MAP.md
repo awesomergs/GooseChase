@@ -116,6 +116,7 @@ One file is compiled into both targets: `Quarry/Shared/HuntActivityAttributes.sw
 | File | Purpose |
 |---|---|
 | `SPEC.md` | Scope, contracts, work split, timeline, demo, conventions, rules for agents. |
+| `Quarry-Mockups.png` | Visual concept board for Join, Host, Create, and Live Activities; reference only, not an app asset. |
 | `DESIGN.md` | Visual design guide: ivory-white and orange semantic palette, native Apple and Liquid Glass rules, typography, components, screen layouts, and accessibility acceptance criteria; no app behavior changes. |
 | `MAP.md` | This file. |
 | `PLAN.md` | Afternoon plan (v3: joining + leaderboard): per-person tasks, agent prompts, cut order, demo script, checklist. |
@@ -136,3 +137,18 @@ One file is compiled into both targets: `Quarry/Shared/HuntActivityAttributes.sw
 - Mockup hierarchy refinement: home introduction and hunt-card badges/actions, numbered editor rows and setup metrics, staged checkpoint editor, active progress/clue/metric cards with adaptive bottom actions, and completion summary. All use existing hunt data.
 
 - Playful polish: home uses a compact “Your hunts” heading and existing running-goose artwork (`d f` image asset); the goose also appears in the empty state, photo placeholders, and completion. Repeated camera badges and promotional slogans are removed. Primary buttons use native prominent Liquid Glass.
+
+## Tab redesign and Live Activity concepts
+
+- `Quarry/Design/HuntTabHeader.swift`: shared sky/grass header with the existing running goose for Join, Host, and Create.
+- Join, Host, and Create use pale-blue lists and white cards; the existing native TabView and SF Symbol icons are retained. Existing joining, hosting, editing, sharing, deletion, and play actions remain connected.
+
+- `QuarryWidgets/ActivityGoose.swift`: extension-local vector mascot with standard leg rotation transforms; supports running poses; ActivityMascot owns update transitions and accessibility motion handling. No continuous animation or extra activity updates.
+- `QuarryWidgets/ActivityGrass.swift`: ground shape with a flat section aligned beneath the Lock Screen goose.
+- `QuarryWidgets/QuarryWidgetsLiveActivity.swift`: sky/grass hunting card, green cleared/finished card, white-on-black Dynamic Island and white camera link with black text; preserved timers, camera URL, and Watch support. Progress reflects cleared checkpoints and uses a continuous bar for long hunts.
+
+- `Quarry/Design/HuntTabBackground.swift`: pale-blue tab page background with sky painted through the top safe area; content and native tab-bar placement stay unchanged.
+- `Quarry/Design/HuntTabSceneShape.swift`: shallow curved lower edge for the shared header’s grass-to-page transition.
+
+- `QuarryWidgets/ActivityMascot.swift`: shared state-driven mascot for Lock Screen, all Island sizes, and Watch. Native push transition on activity updates; respects Reduce Motion, reduced luminance, and finished state. No continuous background animation.
+- Join name/code, hunt title, and checkpoint clue fields have focus-driven keyboard Done controls. Snap it uses its native orange glass button without an opaque label background.
