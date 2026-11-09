@@ -18,6 +18,8 @@ nonisolated final class CameraSession: NSObject, AVCaptureVideoDataOutputSampleB
     private var latestFrameTime = ContinuousClock.now
     private var configured = false
     private var captureDelegate: PhotoDelegate?
+    /// Last few live-frame scores; averaged so one lucky or blurry frame can't flip the result.
+    private var recentScores: [Double] = []
 
     enum CameraError: Error {
         case unavailable
@@ -28,6 +30,7 @@ nonisolated final class CameraSession: NSObject, AVCaptureVideoDataOutputSampleB
         try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
             queue.async {
                 do {
+                    self.recentScores = []
                     if !self.configured {
                         try self.configure()
                     }
@@ -77,6 +80,7 @@ nonisolated final class CameraSession: NSObject, AVCaptureVideoDataOutputSampleB
     func stop() {
         queue.async {
             self.latestFrame = nil
+            self.recentScores = []
             if self.session.isRunning {
                 self.session.stopRunning()
             }
@@ -112,7 +116,12 @@ nonisolated final class CameraSession: NSObject, AVCaptureVideoDataOutputSampleB
                             let quadrant = (Int((rotationAngle / 90).rounded()) % 4 + 4) % 4
                             image = UIImage(cgImage: cgImage, scale: 1, orientation: orientations[quadrant])
                         }
-                        return VisionMatcher.score(forDistance: try VisionMatcher.bestDistance(from: image, to: references))
+                        let raw = VisionMatcher.score(forDistance: try VisionMatcher.bestDistance(from: image, to: references))
+                        // Still photos (the final check) use their own score; live frames are smoothed.
+                        guard photo == nil else { return raw }
+                        self.recentScores.append(raw)
+                        if self.recentScores.count > 3 { self.recentScores.removeFirst() }
+                        return self.recentScores.reduce(0, +) / Double(self.recentScores.count)
                     }
                     continuation.resume(returning: score)
                 } catch {

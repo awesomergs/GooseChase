@@ -15,15 +15,23 @@ nonisolated enum VisionMatcher {
     }
 
     /// Player side: distance from a photo/frame to the closest reference print. Smaller = more similar.
+    /// Scores several views of the frame (whole frame, center crop, and a crop around the most
+    /// eye-catching object) and keeps the best, so a player standing further back or in front of a
+    /// different background still matches. Reference prints are unchanged (whole photo).
     static func bestDistance(from image: UIImage, to references: [Data]) throws -> Float {
-        let candidate = try featurePrint(for: image)
+        let refs = references.compactMap {
+            try? NSKeyedUnarchiver.unarchivedObject(ofClass: VNFeaturePrintObservation.self, from: $0)
+        }
+        guard !refs.isEmpty else { return .greatestFiniteMagnitude }
+        let candidates = try candidatePrints(for: image)
+        guard !candidates.isEmpty else { throw MatchError.noResult }
         var best = Float.greatestFiniteMagnitude
-        for data in references {
-            guard let ref = try NSKeyedUnarchiver.unarchivedObject(
-                ofClass: VNFeaturePrintObservation.self, from: data) else { continue }
-            var distance: Float = 0
-            try candidate.computeDistance(&distance, to: ref)
-            best = min(best, distance)
+        for candidate in candidates {
+            for ref in refs {
+                var distance: Float = 0
+                try candidate.computeDistance(&distance, to: ref)
+                best = min(best, distance)
+            }
         }
         return best
     }
@@ -45,6 +53,33 @@ nonisolated enum VisionMatcher {
         try handler.perform([request])
         guard let result = request.results?.first else { throw MatchError.noResult }
         return result
+    }
+
+    /// Feature prints for the whole frame, a center crop, and (if Vision finds one) the main object.
+    private static func candidatePrints(for image: UIImage) throws -> [VNFeaturePrintObservation] {
+        guard let cg = image.cgImage else { throw MatchError.noImage }
+        let handler = VNImageRequestHandler(cgImage: cg, orientation: image.cgOrientation)
+        let unit = CGRect(x: 0, y: 0, width: 1, height: 1)
+        var regions: [CGRect] = [unit, CGRect(x: 0.2, y: 0.2, width: 0.6, height: 0.6)]
+
+        let saliency = VNGenerateObjectnessBasedSaliencyImageRequest()
+        if (try? handler.perform([saliency])) != nil,
+           let object = saliency.results?.first?.salientObjects?.max(by: { $0.confidence < $1.confidence }) {
+            let box = object.boundingBox
+            let padded = box.insetBy(dx: -box.width * 0.15, dy: -box.height * 0.15).intersection(unit)
+            // Skip tiny specks and boxes that are basically the whole frame.
+            if padded.width >= 0.15, padded.height >= 0.15, padded.width * padded.height < 0.85 {
+                regions.append(padded)
+            }
+        }
+
+        let requests = regions.map { region -> VNGenerateImageFeaturePrintRequest in
+            let request = VNGenerateImageFeaturePrintRequest()
+            request.regionOfInterest = region
+            return request
+        }
+        try handler.perform(requests)
+        return requests.compactMap { $0.results?.first }
     }
 
     enum MatchError: Error { case noImage, noResult }
