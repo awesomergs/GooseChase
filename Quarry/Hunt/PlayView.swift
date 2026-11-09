@@ -132,8 +132,8 @@ struct PlayView: View {
             } label: {
                 Label("Snap it", systemImage: "camera.fill")
                     .font(.headline)
-                    .frame(maxWidth: .infinity)
-                    .background(theme.canvas)
+                    .frame(maxWidth: .infinity, minHeight: 32)
+                    .foregroundStyle(Brand.ink)
             }
             .gooseProminent()
         }

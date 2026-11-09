@@ -91,11 +91,13 @@ struct PageBackground: View {
 // MARK: - Modifiers
 
 extension View {
-    /// The one main action on a screen: orange Liquid Glass, large.
+    /// The main action uses a solid fill to keep its label readable over the scene.
     func gooseProminent(_ color: Color = Brand.orange) -> some View {
         self
-            .buttonStyle(.glassProminent)
+            .buttonStyle(.borderedProminent)
+            .buttonBorderShape(.capsule)
             .tint(color)
+            .foregroundStyle(Brand.ink)
             .controlSize(.large)
     }
 

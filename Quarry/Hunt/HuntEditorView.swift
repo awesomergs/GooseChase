@@ -15,6 +15,8 @@ struct HuntEditorView: View {
     @Binding var path: NavigationPath
     @Environment(\.modelContext) private var context
 
+    @FocusState private var isEditingText: Bool
+
     var body: some View {
         Form {
             Section {
@@ -33,6 +35,7 @@ struct HuntEditorView: View {
 
             Section("Hunt name") {
                 TextField("Hunt title", text: $hunt.title, axis: .vertical)
+                    .focused($isEditingText)
                     .font(.system(.title2, design: .rounded).bold())
                     .padding(.vertical, 8)
             }
@@ -73,6 +76,16 @@ struct HuntEditorView: View {
             }
             .listRowBackground(theme.card)
         }
+        .scrollDismissesKeyboard(.interactively)
+        .toolbar {
+            ToolbarItemGroup(placement: .keyboard) {
+                if isEditingText {
+                    Spacer()
+                    Button("Done") { isEditingText = false }
+                }
+            }
+        }
+        .onDisappear { isEditingText = false }
         .scrollContentBackground(.hidden)
         .background(theme.canvas)
         .foregroundStyle(theme.primaryText)
@@ -88,6 +101,7 @@ struct HuntEditorView: View {
     // MARK: - Actions
 
     private func addCheckpoint() {
+        isEditingText = false
         let nextOrder = (hunt.checkpoints.map(\.order).max() ?? -1) + 1
         let cp = Checkpoint(order: nextOrder, clue: "", kind: .exactMatch)
         cp.hunt = hunt

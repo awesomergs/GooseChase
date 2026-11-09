@@ -9,45 +9,84 @@ import SwiftData
 struct CreateTab: View {
     let onPlay: (Hunt) -> Void
 
-    @Environment(\.colorScheme) private var colorScheme
     @Environment(\.modelContext) private var context
     @Query(filter: #Predicate<Hunt> { !$0.isJoined }, sort: \Hunt.createdAt, order: .reverse)
     private var hunts: [Hunt]
     @State private var path = NavigationPath()
 
     var body: some View {
-        let theme = QuarryTheme(colorScheme: colorScheme)
         NavigationStack(path: $path) {
             List {
-                if !hunts.isEmpty {
-                    HStack(spacing: 16) {
-                        Text("Your hunts")
-                            .font(.system(.title, design: .rounded).bold())
-                            .foregroundStyle(theme.primaryText)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                        Image("d f")
-                            .resizable()
-                            .scaledToFit()
-                            .frame(width: 88, height: 88)
-                            .shadow(color: .black.opacity(0.45), radius: 0.75, y: 1)
-                            .rotationEffect(.degrees(-8))
-                            .accessibilityHidden(true)
-                    }
-                    .padding(.vertical, 8)
-                    .listRowBackground(Color.clear)
+                HuntTabHeader(title: "Make a little adventure", subtitle: "Hide it. Snap it. Write a clue.")
                     .listRowSeparator(.hidden)
+                    .listRowInsets(EdgeInsets())
+                    .listRowBackground(Color.clear)
+
+                Button(action: newHunt) {
+                    Label("New hunt", systemImage: "plus")
+                        .font(.headline)
+                        .frame(maxWidth: .infinity, minHeight: 32)
                 }
+                .gooseProminent()
+                .foregroundStyle(Brand.ink)
+                .padding(.horizontal, 16)
+                .listRowInsets(EdgeInsets())
+                .listRowBackground(Color.clear)
+
+                Text("Your hunts")
+                    .font(.title2.bold())
+                    .accessibilityAddTraits(.isHeader)
+                    .listRowBackground(Color.clear)
+
+                if hunts.isEmpty {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("A great chase starts with a clue")
+                            .font(.headline)
+                        Text("Tap New hunt, then add checkpoints with photos of the things you want friends to find.")
+                            .foregroundStyle(.secondary)
+                    }
+                    .padding(18)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(Color(.secondarySystemGroupedBackground), in: .rect(cornerRadius: 22))
+                    .padding(.horizontal, 16)
+                    .listRowInsets(EdgeInsets())
+                    .listRowBackground(Color.clear)
+                }
+
                 ForEach(hunts) { hunt in
-                    HuntListRow(hunt: hunt) {
-                        if hunt.isPlayable { onPlay(hunt) }
+                    VStack(alignment: .leading, spacing: 14) {
+                        HStack(alignment: .top, spacing: 12) {
+                            HuntRow(hunt: hunt)
+                            Spacer(minLength: 0)
+                            if hunt.isPlayable {
+                                Button {
+                                    onPlay(hunt)
+                                } label: {
+                                    Label("Play solo", systemImage: "play.fill")
+                                        .labelStyle(.iconOnly)
+                                        .frame(minWidth: 44, minHeight: 44)
+                                }
+                                .buttonStyle(.bordered)
+                                .tint(Brand.ink)
+                                .accessibilityLabel("Play \(hunt.title) solo")
+                            }
+                        }
+                        NavigationLink(value: hunt) {
+                            Text(hunt.isPlayable ? "Edit hunt" : "Continue editing")
+                                .font(.headline)
+                                .frame(maxWidth: .infinity, minHeight: 32)
+                        }
+                        .buttonStyle(.bordered)
+                        .tint(Brand.ink)
                     }
-                    .modifier(QuarryCardRow())
-                    .accessibilityAction(named: Text("Edit hunt")) {
-                        path.append(hunt)
-                    }
+                    .padding(18)
+                    .background(Color(.secondarySystemGroupedBackground), in: .rect(cornerRadius: 22))
+                    .padding(.horizontal, 16)
+                    .listRowInsets(EdgeInsets())
+                    .listRowBackground(Color.clear)
                     .swipeActions(edge: .leading) {
                         Button("Edit", systemImage: "pencil") { path.append(hunt) }
-                            .tint(theme.accent)
+                            .tint(Brand.sky)
                         if hunt.isPlayable {
                             Button {
                                 onPlay(hunt)
@@ -86,34 +125,14 @@ struct CreateTab: View {
                     }
                 }
             }
-            .listStyle(.insetGrouped)
-            .listRowSpacing(QuarryTheme.cardSpacing)
+            .listStyle(.plain)
+            .listRowSpacing(12)
+            .listRowSeparator(.hidden)
             .scrollContentBackground(.hidden)
-            .background(theme.canvas)
-            .overlay {
-                if hunts.isEmpty {
-                    ContentUnavailableView {
-                        VStack(spacing: 8) {
-                            GooseView(mood: .waiting)
-                                .frame(height: 110)
-                            Text("No hunts yet")
-                        }
-                    } description: {
-                        Text("Snap a few photos of hidden things and write clues to make your first hunt.")
-                    } actions: {
-                        Button("New hunt", action: newHunt)
-                            .gooseProminent()
-                    }
-                }
-            }
-            .pageBackground()
-            .navigationTitle("My Hunts")
-            .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button("New hunt", systemImage: "plus", action: newHunt)
-                        .tint(theme.primaryText)
-                }
-            }
+            .background(HuntTabBackground())
+            .navigationTitle("Your hunts")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar(path.isEmpty ? .hidden : .visible, for: .navigationBar)
             .navigationDestination(for: Hunt.self) { hunt in
                 HuntEditorView(hunt: hunt, path: $path)
             }
@@ -154,4 +173,9 @@ struct HuntRow: View {
         }
         .padding(.vertical, 2)
     }
+}
+
+#Preview {
+    CreateTab(onPlay: { _ in })
+        .modelContainer(for: [Hunt.self, Checkpoint.self], inMemory: true)
 }

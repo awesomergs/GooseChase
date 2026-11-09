@@ -62,15 +62,15 @@ struct CameraCaptureView: View {
         }
         .safeAreaInset(edge: .top) {
             HStack(alignment: .top) {
-                Text(title)
-                    .font(.headline)
-                    .frame(maxWidth: .infinity, alignment: .leading)
                 Button("Close", systemImage: "xmark") {
                     deactivate()
                     dismiss()
                 }
                 .buttonStyle(.glass)
                 .tint(cameraTheme.card)
+                Text(title)
+                    .font(.headline)
+                    .frame(maxWidth: .infinity, alignment: .leading)
             }
             .padding()
             .background(.black.opacity(reduceTransparency ? 1 : 0.8))
