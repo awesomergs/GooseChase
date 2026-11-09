@@ -7,6 +7,9 @@
 import SwiftUI
 
 struct LeaderboardView: View {
+    @Environment(\.colorScheme) private var colorScheme
+    private var theme: QuarryTheme { QuarryTheme(colorScheme: colorScheme) }
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     var race: RaceSession = .shared
 
     var body: some View {
@@ -34,13 +37,19 @@ struct LeaderboardView: View {
                 }
             }
         }
-        .animation(.spring(duration: 0.4), value: race.players.map(\.id))
+        .scrollContentBackground(.hidden)
+        .background(theme.canvas)
+        .foregroundStyle(theme.primaryText)
+        .tint(theme.accent)
+        .animation(reduceMotion ? nil : .spring(duration: 0.4), value: race.players.map(\.id))
         .sensoryFeedback(.selection, trigger: race.myRank)
         .navigationTitle("Leaderboard")
     }
 }
 
 struct LeaderboardRow: View {
+    @Environment(\.colorScheme) private var colorScheme
+    private var theme: QuarryTheme { QuarryTheme(colorScheme: colorScheme) }
     let rank: Int
     let player: PlayerProgress
     let isMe: Bool
@@ -51,20 +60,19 @@ struct LeaderboardRow: View {
             RankBadge(rank: rank)
 
             VStack(alignment: .leading, spacing: 6) {
-                HStack {
+                VStack(alignment: .leading, spacing: 4) {
                     Text(isMe ? "You" : player.name)
                         .font(.body.weight(isMe ? .bold : .regular))
-                    Spacer()
                     statusText
                         .font(.subheadline.monospacedDigit())
-                        .foregroundStyle(player.finishedAt != nil ? Color.green : Color.secondary)
+                        .foregroundStyle(player.finishedAt != nil ? theme.verified : theme.secondaryText)
                 }
                 ProgressSegments(cleared: player.cleared, total: player.total,
                                  finished: player.finishedAt != nil)
             }
         }
         .padding(.vertical, 4)
-        .listRowBackground(isMe ? Color.indigo.opacity(0.08) : nil)
+        .listRowBackground(isMe ? theme.sand : theme.card)
         .accessibilityElement(children: .combine)
         .accessibilityLabel(accessibilityText)
     }
@@ -95,28 +103,23 @@ struct LeaderboardRow: View {
 }
 
 private struct RankBadge: View {
+    @Environment(\.colorScheme) private var colorScheme
+    private var theme: QuarryTheme { QuarryTheme(colorScheme: colorScheme) }
     let rank: Int
-
-    private var tint: Color {
-        switch rank {
-        case 1: .yellow
-        case 2: .gray
-        case 3: .brown
-        default: .secondary
-        }
-    }
 
     var body: some View {
         Text("\(rank)")
             .font(.headline.monospacedDigit())
-            .foregroundStyle(rank <= 3 ? Color.white : Color.secondary)
+            .foregroundStyle(rank == 1 ? theme.onAccent : theme.primaryText)
             .frame(width: 32, height: 32)
-            .background(rank <= 3 ? tint : Color.secondary.opacity(0.15), in: Circle())
+            .background(rank == 1 ? theme.accent : theme.sand, in: Circle())
             .accessibilityHidden(true)
     }
 }
 
 private struct ProgressSegments: View {
+    @Environment(\.colorScheme) private var colorScheme
+    private var theme: QuarryTheme { QuarryTheme(colorScheme: colorScheme) }
     let cleared: Int
     let total: Int
     let finished: Bool
@@ -125,8 +128,8 @@ private struct ProgressSegments: View {
         HStack(spacing: 3) {
             ForEach(0..<max(total, 1), id: \.self) { i in
                 Capsule()
-                    .fill(i < cleared ? (finished ? Color.green : Color.indigo)
-                                      : Color.secondary.opacity(0.2))
+                    .fill(i < cleared ? theme.verified
+                                      : theme.secondaryText.opacity(0.2))
                     .frame(height: 5)
             }
         }

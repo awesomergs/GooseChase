@@ -21,6 +21,10 @@ import SwiftData
 extension HuntSession: Identifiable {}
 
 struct PlayView: View {
+    @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    @Environment(\.verticalSizeClass) private var verticalSizeClass
+    private var theme: QuarryTheme { QuarryTheme(colorScheme: colorScheme) }
     @Bindable var session: HuntSession
     /// Synced start time for a race. Nil for solo play (session.start() was already
     /// called by the presenter). When non-nil, a 3-2-1 countdown is shown and
@@ -43,6 +47,8 @@ struct PlayView: View {
                 playScreen
             }
         }
+        .background(theme.canvas)
+        .tint(theme.accent)
         .sensoryFeedback(.success, trigger: session.lastClearedNumber)
         .fullScreenCover(item: $cameraCheckpoint) { cp in
             VerifyCameraView(checkpoint: cp) {
@@ -127,6 +133,7 @@ struct PlayView: View {
                 Label("Snap it", systemImage: "camera.fill")
                     .font(.headline)
                     .frame(maxWidth: .infinity)
+                    .background(theme.canvas)
             }
             .gooseProminent()
         }
@@ -189,7 +196,7 @@ struct PlayView: View {
         if RaceSession.shared.isActive, let rank = RaceSession.shared.myRank {
             Text("You're \(ordinal(rank))")
                 .font(.caption.weight(.semibold))
-                .foregroundStyle(.white)
+                .foregroundStyle(theme.onAccent)
                 .padding(.horizontal, 10)
                 .padding(.vertical, 4)
                 .background(Brand.orange, in: Capsule())
