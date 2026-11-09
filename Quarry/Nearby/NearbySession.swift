@@ -217,7 +217,7 @@ final class NearbySession {
     fileprivate func startFailed(_ what: String, _ error: any Error) {
         note("⚠️ Couldn't start \(what): \(error.localizedDescription)")
         if !isHosting {
-            status = .failed("iOS blocked the search for nearby phones. Turn on Settings → Privacy & Security → Local Network → Quarry, then try again.")
+            status = .failed("iOS blocked the search for nearby phones. Turn on Settings → Privacy & Security → Local Network → GooseChase, then try again.")
         }
     }
 

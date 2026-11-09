@@ -68,6 +68,7 @@ struct PlayView: View {
             }
         }
         .task { await runCountdown() }
+        .fontDesign(.rounded)
     }
 
     // MARK: Countdown
@@ -106,25 +107,32 @@ struct PlayView: View {
     // MARK: Clue screen
 
     private var playScreen: some View {
-        VStack(spacing: 20) {
+        VStack(spacing: 18) {
             topBar
             progressBar
             rankPill
             Text("Checkpoint \(session.progressText)")
                 .font(.headline)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(.white.opacity(0.9))
             clueCard
             Spacer()
+            HStack {
+                GooseView(mood: .waiting)
+                    .frame(height: 96)
+                Spacer()
+            }
             Button {
                 cameraCheckpoint = session.current
             } label: {
-                Label("Open camera", systemImage: "camera.fill")
+                Label("Snap it", systemImage: "camera.fill")
+                    .font(.headline)
                     .frame(maxWidth: .infinity)
             }
-            .buttonStyle(.borderedProminent)
-            .controlSize(.large)
+            .gooseProminent()
         }
         .padding(24)
+        .foregroundStyle(.white)
+        .background(SkyBackground(grassHeight: 150))
     }
 
     private var topBar: some View {
@@ -135,14 +143,19 @@ struct PlayView: View {
             } label: {
                 Image(systemName: "xmark")
                     .font(.headline)
+                    .frame(width: 22, height: 22)
             }
+            .buttonStyle(.glass)
+            .buttonBorderShape(.circle)
             .accessibilityLabel("End hunt")
 
             Spacer()
 
             Text(session.startDate, style: .timer)
                 .font(.headline.monospacedDigit())
-                .foregroundStyle(.secondary)
+                .padding(.horizontal, 14)
+                .padding(.vertical, 8)
+                .glassEffect(.regular, in: Capsule())
 
             if RaceSession.shared.isActive {
                 Button {
@@ -151,7 +164,8 @@ struct PlayView: View {
                     Image(systemName: "list.number")
                         .font(.headline)
                 }
-                .padding(.leading, 12)
+                .buttonStyle(.glass)
+                .padding(.leading, 8)
                 .accessibilityLabel("Leaderboard")
             }
         }
@@ -162,10 +176,11 @@ struct PlayView: View {
             ForEach(session.checkpoints.indices, id: \.self) { i in
                 Capsule()
                     .fill(segmentColor(for: i))
-                    .frame(height: 6)
+                    .frame(height: 7)
                     .frame(maxWidth: .infinity)
             }
         }
+        .animation(.spring(duration: 0.4), value: session.currentIndex)
     }
 
     /// Rank pill shown below the progress bar during a race.
@@ -177,28 +192,31 @@ struct PlayView: View {
                 .foregroundStyle(.white)
                 .padding(.horizontal, 10)
                 .padding(.vertical, 4)
-                .background(.indigo, in: Capsule())
+                .background(Brand.orange, in: Capsule())
                 .animation(.spring(duration: 0.3), value: rank)
         }
     }
 
     private func segmentColor(for index: Int) -> Color {
         if index < session.currentIndex {
-            .indigo                       // cleared
+            Brand.grass                  // cleared
         } else if index == session.currentIndex {
-            .indigo.opacity(0.45)         // current
+            .white                       // current
         } else {
-            Color.secondary.opacity(0.25) // upcoming
+            .white.opacity(0.3)          // upcoming
         }
     }
 
     private var clueCard: some View {
-        Text(session.current?.clue ?? "")
-            .font(.title2.weight(.semibold))
-            .multilineTextAlignment(.center)
-            .frame(maxWidth: .infinity)
-            .padding(24)
-            .background(.quaternary, in: RoundedRectangle(cornerRadius: 20))
+        VStack(spacing: 8) {
+            Text("Clue")
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(.white.opacity(0.85))
+            Text(session.current?.clue ?? "")
+                .font(.title2.weight(.bold))
+                .multilineTextAlignment(.center)
+        }
+        .skyCard()
     }
 }
 
@@ -209,19 +227,22 @@ private struct RaceCountdownView: View {
 
     var body: some View {
         ZStack {
-            Color(.systemBackground)
-                .ignoresSafeArea()
-            VStack(spacing: 16) {
+            SkyBackground(grassHeight: 120)
+            VStack(spacing: 12) {
                 Text("\(count)")
-                    .font(.system(size: 120, weight: .black, design: .rounded))
-                    .foregroundStyle(.indigo)
+                    .font(.system(size: 130, weight: .black, design: .rounded))
+                    .foregroundStyle(.white)
                     .contentTransition(.numericText(countsDown: true))
                     .animation(.spring(duration: 0.35), value: count)
                 Text("Get ready!")
-                    .font(.title2.weight(.semibold))
-                    .foregroundStyle(.secondary)
+                    .font(.title2.weight(.bold))
+                    .foregroundStyle(.white)
+                GooseView(mood: .running)
+                    .frame(height: 110)
+                    .padding(.top, 24)
             }
         }
+        .sensoryFeedback(.impact(weight: .medium), trigger: count)
     }
 }
 

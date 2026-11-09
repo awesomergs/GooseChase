@@ -399,8 +399,9 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Quarry/Info.plist;
-				INFOPLIST_KEY_NSCameraUsageDescription = "Quarry uses the camera to check that you found the right thing.";
-				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Quarry shows how close you are to each checkpoint.";
+				INFOPLIST_KEY_CFBundleDisplayName = GooseChase;
+				INFOPLIST_KEY_NSCameraUsageDescription = "GooseChase uses the camera to check that you found the right thing.";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "GooseChase shows how close you are to each checkpoint.";
 				INFOPLIST_KEY_NSSupportsLiveActivities = YES;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -435,8 +436,9 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Quarry/Info.plist;
-				INFOPLIST_KEY_NSCameraUsageDescription = "Quarry uses the camera to check that you found the right thing.";
-				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Quarry shows how close you are to each checkpoint.";
+				INFOPLIST_KEY_CFBundleDisplayName = GooseChase;
+				INFOPLIST_KEY_NSCameraUsageDescription = "GooseChase uses the camera to check that you found the right thing.";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "GooseChase shows how close you are to each checkpoint.";
 				INFOPLIST_KEY_NSSupportsLiveActivities = YES;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;

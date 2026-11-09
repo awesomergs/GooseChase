@@ -26,29 +26,31 @@ struct HostLobbyView: View {
                 VStack(spacing: 24) {
                     VStack(spacing: 6) {
                         Text(hunt.title)
-                            .font(.title2.bold())
+                            .font(.largeTitle.bold())
                             .multilineTextAlignment(.center)
                         Text("\(hunt.checkpoints.count) checkpoints · scan to join")
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
+                            .font(.subheadline.weight(.medium))
+                            .opacity(0.9)
                     }
 
                     if let code = nearby.roomCode {
                         QRCodeView(url: RoomCode.joinURL(code))
-                            .frame(maxWidth: 260)
+                            .frame(maxWidth: 250)
+                            .shadow(color: Brand.ink.opacity(0.15), radius: 12, y: 6)
 
                         VStack(spacing: 4) {
                             Text("or enter code")
-                                .font(.subheadline)
-                                .foregroundStyle(.secondary)
+                                .font(.subheadline.weight(.medium))
+                                .opacity(0.9)
                             Text(code)
-                                .font(.system(.largeTitle, design: .monospaced).weight(.bold))
+                                .font(.system(size: 44, weight: .heavy, design: .rounded))
                                 .kerning(8)
                                 .textSelection(.enabled)
                                 .accessibilityLabel("Room code \(code.map(String.init).joined(separator: " "))")
                         }
                     } else {
-                        ProgressView("Starting…")
+                        GooseView(mood: .running)
+                            .frame(height: 120)
                             .frame(height: 260)
                     }
 
@@ -57,7 +59,8 @@ struct HostLobbyView: View {
                 .padding(.vertical, 24)
                 .padding(.horizontal)
             }
-            .background(Color(.systemGroupedBackground))
+            .foregroundStyle(.white)
+            .background(SkyBackground(grassHeight: 120))
             .safeAreaInset(edge: .bottom) {
                 Button {
                     let date = Date.now.addingTimeInterval(4)
@@ -69,13 +72,12 @@ struct HostLobbyView: View {
                         .font(.headline)
                         .frame(maxWidth: .infinity)
                 }
-                .buttonStyle(.borderedProminent)
-                .controlSize(.large)
+                .gooseProminent()
                 .padding(.horizontal)
                 .padding(.bottom, 8)
             }
-            .navigationTitle("Host")
             .navigationBarTitleDisplayMode(.inline)
+            .fontDesign(.rounded)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") {
@@ -103,26 +105,30 @@ struct HostLobbyView: View {
                 Spacer()
                 Text("\(playerCount)")
                     .font(.headline.monospacedDigit())
-                    .foregroundStyle(.secondary)
+                    .contentTransition(.numericText())
             }
             if nearby.joinedPlayers.isEmpty {
                 HStack(spacing: 10) {
-                    ProgressView()
+                    GooseView(mood: .waiting)
+                        .frame(height: 50)
                     Text("Waiting for players… keep this screen open.")
-                        .foregroundStyle(.secondary)
+                        .font(.subheadline)
+                        .opacity(0.9)
                 }
-                .padding(.vertical, 6)
+                .padding(.vertical, 2)
             } else {
                 ForEach(nearby.joinedPlayers, id: \.self) { name in
                     Label(name, systemImage: "checkmark.circle.fill")
-                        .symbolRenderingMode(.multicolor)
+                        .font(.headline)
+                        .symbolRenderingMode(.palette)
+                        .foregroundStyle(.white, Brand.grass)
                         .transition(.move(edge: .top).combined(with: .opacity))
                 }
             }
         }
-        .padding()
+        .padding(18)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 16))
+        .glassEffect(.regular, in: RoundedRectangle(cornerRadius: 22))
         .animation(.spring, value: nearby.joinedPlayers)
     }
 }

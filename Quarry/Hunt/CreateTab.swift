@@ -63,15 +63,20 @@ struct CreateTab: View {
             .overlay {
                 if hunts.isEmpty {
                     ContentUnavailableView {
-                        Label("No hunts yet", systemImage: "flag")
+                        VStack(spacing: 8) {
+                            GooseView(mood: .waiting)
+                                .frame(height: 110)
+                            Text("No hunts yet")
+                        }
                     } description: {
                         Text("Snap a few photos of hidden things and write clues to make your first hunt.")
                     } actions: {
                         Button("New hunt", action: newHunt)
-                            .buttonStyle(.borderedProminent)
+                            .gooseProminent()
                     }
                 }
             }
+            .pageBackground()
             .navigationTitle("My Hunts")
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
