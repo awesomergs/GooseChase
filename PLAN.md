@@ -1,3 +1,6 @@
+> **Archived — hackathon planning docs, superseded by README/MAP/DESIGN and docs/phase0.**
+> Kept for history: this is the plan the team worked from at the iOSC Fall 2026 Hackathon (Nov 8, 2026). File names, owners and scope below may no longer match the code; see `MAP.md` for the current structure.
+
 # Quarry: Afternoon Plan (v3, rebuilt 1:05): Joining + Live Leaderboard
 
 **The new headline feature:** a host makes a hunt, shows a **QR code / 4-letter room code**, friends **scan to join** (phone-to-phone, no internet), the host taps **Start for everyone**, and a **live leaderboard** updates as people clear checkpoints. **AirDrop/Messages sharing** of a hunt file is the fallback. **Location is now a stretch goal.**

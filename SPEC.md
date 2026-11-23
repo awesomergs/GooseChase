@@ -1,3 +1,6 @@
+> **Archived — hackathon planning docs, superseded by README/MAP/DESIGN and docs/phase0.**
+> Kept for history: this is the plan the team worked from at the iOSC Fall 2026 Hackathon (Nov 8, 2026). File names, owners and scope below may no longer match the code; see `MAP.md` for the current structure.
+
 # Quarry: Project Spec
 
 **iOSC Fall 2026 Hackathon · Sunday Nov 8 · team of 3 · hacking 10:30am → submit 6:30pm → pitch 7:00pm**
