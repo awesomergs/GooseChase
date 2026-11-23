@@ -12,7 +12,6 @@ enum AppTab: Hashable {
 }
 
 struct ContentView: View {
-    @Environment(\.modelContext) private var context
     @Environment(\.colorScheme) private var colorScheme
     @State private var selection: AppTab = .join
     @State private var game: GameLaunch?
@@ -62,7 +61,6 @@ struct ContentView: View {
             }
             // quarry://camera is handled by PlayView while a game is running.
         }
-        .onAppear { DemoData.seedIfEmpty(context) }
         .task { await LiveActivityManager.shared.endAllStale() }
     }
 
