@@ -1,0 +1,70 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build (iOS Simulator)
+    # NOTE: runner image and Xcode path may need adjusting. GooseChase needs Xcode 26 / the iOS 26 SDK.
+    # If `macos-26` isn't available on your account yet, try `macos-15` (check which Xcode versions
+    # its image ships: https://github.com/actions/runner-images).
+    runs-on: macos-26
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Select Xcode 26
+        # Picks the newest /Applications/Xcode_26*.app on the runner. Pin an exact path
+        # (e.g. /Applications/Xcode_26.1.app) if you want reproducible builds.
+        run: |
+          XCODE_APP=$(ls -d /Applications/Xcode_26*.app 2>/dev/null | sort -V | tail -n 1)
+          if [ -z "$XCODE_APP" ]; then
+            echo "No Xcode 26 found on this runner. Available:"; ls -d /Applications/Xcode*.app
+            exit 1
+          fi
+          sudo xcode-select -s "$XCODE_APP/Contents/Developer"
+          xcodebuild -version
+
+      - name: List schemes
+        # The Quarry scheme must be shared (Product → Scheme → Manage Schemes → Shared),
+        # because xcuserdata/ is gitignored.
+        run: xcodebuild -list -project Quarry.xcodeproj
+
+      - name: Build
+        run: |
+          xcodebuild \
+            -project Quarry.xcodeproj \
+            -scheme Quarry \
+            -destination 'generic/platform=iOS Simulator' \
+            CODE_SIGNING_ALLOWED=NO \
+            build
+
+  # Enable after the GooseChaseTests target exists and the Quarry scheme's Test action includes it
+  # (see GooseChaseTests/README.md). Change the simulator name to one the runner image has
+  # (`xcrun simctl list devices available`).
+  #
+  # test:
+  #   name: Unit tests (iOS Simulator)
+  #   runs-on: macos-26
+  #   timeout-minutes: 30
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - name: Select Xcode 26
+  #       run: |
+  #         XCODE_APP=$(ls -d /Applications/Xcode_26*.app 2>/dev/null | sort -V | tail -n 1)
+  #         sudo xcode-select -s "$XCODE_APP/Contents/Developer"
+  #         xcodebuild -version
+  #     - name: Test
+  #       run: |
+  #         xcodebuild \
+  #           -project Quarry.xcodeproj \
+  #           -scheme Quarry \
+  #           -destination 'platform=iOS Simulator,name=iPhone 17' \
+  #           CODE_SIGNING_ALLOWED=NO \
+  #           test

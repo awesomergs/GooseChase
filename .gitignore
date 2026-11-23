@@ -15,3 +15,7 @@ build/
 
 # Scratch files from AI helpers (not part of the app)
 Claude outputs/
+
+# Local planning notes (not part of the app)
+NIGHTLY_SUMMARY.md
+docs/phase0/
