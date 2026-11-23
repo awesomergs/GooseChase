@@ -37,16 +37,6 @@ struct SkyBackground: View {
     }
 }
 
-/// Small sky scene used as a card background (the Join tab hero).
-struct SkyCardBackground: View {
-    var body: some View {
-        LinearGradient(colors: [Brand.sky, Brand.skyLight], startPoint: .top, endPoint: .bottom)
-            .overlay(alignment: .bottom) {
-                GrassHill().frame(height: 18)
-            }
-    }
-}
-
 /// Grass with a gentle wavy top edge and a darker rim.
 struct GrassHill: View {
     var body: some View {
@@ -76,18 +66,6 @@ nonisolated struct GrassShape: Shape {
     }
 }
 
-/// Behind lists (Join form, Host, Create): a soft sky wash fading into the normal grouped background.
-struct PageBackground: View {
-    var body: some View {
-        LinearGradient(
-            colors: [Brand.sky.opacity(0.28), Color(.systemGroupedBackground)],
-            startPoint: .top, endPoint: .init(x: 0.5, y: 0.45)
-        )
-        .background(Color(.systemGroupedBackground))
-        .ignoresSafeArea()
-    }
-}
-
 // MARK: - Modifiers
 
 extension View {
@@ -107,12 +85,5 @@ extension View {
             .padding(20)
             .frame(maxWidth: .infinity)
             .glassEffect(.regular, in: RoundedRectangle(cornerRadius: cornerRadius))
-    }
-
-    /// List background for the tab screens.
-    func pageBackground() -> some View {
-        self
-            .scrollContentBackground(.hidden)
-            .background(PageBackground())
     }
 }
