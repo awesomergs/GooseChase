@@ -68,9 +68,9 @@ ContentView.launch(hunt, startAt) ──► PlayView (3-2-1 countdown) ──►
 | File | What it does |
 |---|---|
 | `QuarryApp.swift` | `@main`: builds the SwiftData container (`Hunt`, `Checkpoint`), shows `ContentView`, forces light appearance. |
-| `ContentView.swift` | App shell: `AppTab` + Join/Host/Create `TabView`, the game launcher (`GameLaunch` → full-screen `PlayView`), `finish` (best time, Nearby teardown), `onOpenURL` for join links and `.quarryhunt` files, demo seeding, stale Live Activity cleanup; shared `huntThumbnail(_:size:)`; private `ImportHuntSheet`. |
+| `ContentView.swift` | App shell: `AppTab` + Join/Host/Create `TabView`, the game launcher (`GameLaunch` → full-screen `PlayView`), `finish` (best time, Nearby teardown), `onOpenURL` for join links and `.quarryhunt` files, stale Live Activity cleanup; shared `huntThumbnail(_:size:)`; private `ImportHuntSheet`. |
 | `Info.plist` | Extra keys merged into the generated plist: `quarry://` URL scheme, Local Network usage + Bonjour `_quarry-hunt._tcp/_udp`, `.quarryhunt` exported UTType and document type, Siri alternative app names. |
-| `Assets.xcassets` | Accent color, app icon set, and two near-identical `GooseChase` / `GooseChase 1` folders (icon dataset + `d f` goose image); likely an accidental duplicate. |
+| `Assets.xcassets` | Accent color and the `GooseChase` icon dataset (`d f` goose image). |
 | `GooseChase.icon` | Icon Composer layered app icon (light/dark/tinted). |
 
 ### `Quarry/Design/` (brand look)
@@ -94,7 +94,6 @@ ContentView.launch(hunt, startAt) ──► PlayView (3-2-1 countdown) ──►
 | `CheckpointClearedView.swift` | "Honk! Checkpoint N cleared" screen with thumbnail, split time, Next clue/Finish. |
 | `HuntFinishedView.swift` | Finish screen: total time, per-checkpoint splits, photo grid (or leaderboard when racing), Done. |
 | `HuntPackage+SwiftData.swift` | `HuntPackage(hunt:)` and `importHunt(into:)` (upsert by `shareID`). |
-| `DemoData.swift` | Seeds a 3-checkpoint "Birthday Hunt" (no photos) on first launch. |
 | `QuarryTheme.swift` | Cody's semantic palette + spacing/radius tokens (ivory/orange). Live; to be merged into `Brand`. |
 | `QuarryMetricView.swift` | Metric tile (title, value, symbol); used by `HuntEditorView`. |
 
