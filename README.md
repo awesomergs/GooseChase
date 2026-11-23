@@ -39,13 +39,7 @@ Built in about 8 hours at the iOSC Fall 2026 Hackathon with Swift and SwiftUI, f
 See `MAP.md` (every file and how the flows connect) and `DESIGN.md` (the design system). `PLAN.md` and `SPEC.md` are the archived hackathon planning docs.
 
 ## Credits
-GooseChase was built at the **iOSC Fall 2026 Hackathon** (Sunday, November 8, 2026) by a team of three:
-
-- **Rohan**: app shell and tabs, Live Activity / Dynamic Island / Apple Watch Smart Stack, App Intents, nearby joining and the host lobby, QR join links, the race session.
-- **Cody**: Vision matching and the camera, plus the warm design pass (`QuarryTheme`, `DESIGN.md`). <!-- TODO(Rohan): confirm Cody = "Person A" (Vision/camera) in the code headers. -->
-- **B** (third teammate): the hunt flow and data: create/edit screens, the play session, SwiftData ⇄ `HuntPackage` conversion, demo data.
-
-Everything in the app today was built during the hackathon. Since then, Rohan is continuing GooseChase **solo as a portfolio project**: clean-up, documentation, tests and CI first, then matching quality and new gameplay (see the roadmap below).
+GooseChase was built at the **iOSC Fall 2026 Hackathon** (Sunday, November 8, 2026) with two teammates. Since then, it's continued **solo as a portfolio project**: clean-up, documentation, tests and CI first, then matching quality and new gameplay (see the roadmap below).
 
 ## Status / roadmap
 The code and Xcode project are still named **Quarry** (the hackathon codename); the app already displays as **GooseChase**. Renaming the project, targets and folders to GooseChase is planned for Phase 0, keeping the `quarry://` link scheme so existing QR codes keep working.
