@@ -47,7 +47,6 @@ jobs:
 
   test:
     name: Unit tests (iOS Simulator)
-    # Change the simulator name to one the runner image has (`xcrun simctl list devices available`).
     runs-on: macos-26
     timeout-minutes: 30
     steps:
@@ -57,11 +56,26 @@ jobs:
           XCODE_APP=$(ls -d /Applications/Xcode_26*.app 2>/dev/null | sort -V | tail -n 1)
           sudo xcode-select -s "$XCODE_APP/Contents/Developer"
           xcodebuild -version
+
+      - name: Pick a simulator
+        # Runner images change which simulators they ship, so don't hard-code a device name:
+        # take the first available iPhone and fail clearly if there isn't one.
+        id: simulator
+        run: |
+          DEVICE=$(xcrun simctl list devices available | awk -F'[()]' '/iPhone/{print $1; exit}' | sed -E 's/^[[:space:]]+//; s/[[:space:]]+$//')
+          if [ -z "$DEVICE" ]; then
+            echo "::error::No available iPhone simulator found on this runner."
+            xcrun simctl list devices available
+            exit 1
+          fi
+          echo "Using simulator: $DEVICE"
+          echo "name=$DEVICE" >> "$GITHUB_OUTPUT"
+
       - name: Test
         run: |
           xcodebuild \
             -project Quarry.xcodeproj \
             -scheme Quarry \
-            -destination 'platform=iOS Simulator,name=iPhone 17' \
+            -destination 'platform=iOS Simulator,name=${{ steps.simulator.outputs.name }}' \
             CODE_SIGNING_ALLOWED=NO \
             test
