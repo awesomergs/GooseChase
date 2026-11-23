@@ -1,138 +1,157 @@
-# Quarry: Code Map
+# GooseChase (Quarry) · Code map
 
-Where everything lives and what it does. **Read this before searching the codebase.**
-**Keep it current:** if you add, rename or delete a file, or change a public function or type, update this file in the same commit.
+Where everything lives and what it does. **Read this before searching the codebase.** If you add, rename or delete a file, or change a public type or function, update this file in the same commit.
 
-Owners: **A** = Vision/camera · **B** = hunt flow/data · **C** = Live Activity/platform (Rohan) · **Shared** = ask the team first.
+_Rewritten 2026-11-19 from the actual file tree (not from the hackathon plan). The code is still named **Quarry**; the app displays as **GooseChase**._
 
 ## Targets
 
-| Target | Folder | What it builds |
+| Target | Folder | Builds |
 |---|---|---|
-| `Quarry` | `Quarry/` | The iPhone app. Every file in the folder is compiled in automatically (synchronized folder). |
-| `QuarryWidgetsExtension` | `QuarryWidgets/` | Widget extension that hosts **only** the Live Activity (Lock Screen, Dynamic Island, Watch Smart Stack). |
+| `Quarry` | `Quarry/` | The iPhone app (iOS 26, Swift 5 mode, default actor isolation = MainActor). Synchronized folder: every file inside is compiled in automatically. |
+| `QuarryWidgetsExtension` | `QuarryWidgets/` | Widget extension that hosts **only** the Live Activity (Lock Screen, Dynamic Island, Apple Watch Smart Stack). |
+| _(planned)_ `GooseChaseTests` | `GooseChaseTests/` | Swift Testing unit tests. The files exist; the Xcode target does not yet (see `GooseChaseTests/README.md`). |
 
-One file is compiled into both targets: `Quarry/Shared/HuntActivityAttributes.swift` (set in `project.pbxproj`; don't move it).
+`Quarry/Shared/HuntActivityAttributes.swift` is compiled into **both** targets (membership exception in `project.pbxproj`; don't move it).
 
-## Data flow (one line each)
+## How the main flows connect
 
-- **Play:** `ContentView` (Join/Host/Create tabs) → creates `HuntSession(hunt:)` → `session.start()` → `LiveActivityManager.start` → `PlayView` shows the clue → `VerifyCameraView` → `onCleared` → `session.clearCurrent()` (records the split, `LiveActivityManager.cleared`, arms a 3s auto-advance) → `CheckpointClearedView` → "Next clue"/"Finish" (or the timer) → `session.advance()` (`advance` or `end`, runs once per checkpoint) → `HuntFinishedView`.
-- **Capture (available for B):** `CameraCaptureView { image in … }` → one `UIImage` per shutter tap; B stores feature prints and a ≤300 px thumbnail, not the full image.
-- **Create:** checkpoint editor → photo `UIImage` → `VisionMatcher.makeReferencePrint` → stored in `Checkpoint.referencePrints`.
-- **Verify:** camera frame → `VisionMatcher.bestDistance(from:to:)` → `VisionMatcher.score(forDistance:)` → ring progress → sustained match → still capture + verification → success haptic → `onCleared()` exactly once. Empty references block verification.
-- **Deep link:** tapping the Live Activity → `quarry://camera` → `.onOpenURL` in `PlayView` → opens the camera.
+```
+Create tab ──► HuntEditorView ──► CheckpointEditorView ──► CameraPicker ──► VisionMatcher.makeReferencePrint
+                                                                             └─► Checkpoint.referencePrints + thumbnail (SwiftData)
+
+Host tab ──► HostLobbyView ── NearbySession.startHosting(HuntPackage) ── room code + QR (quarry://join?code=XXXX)
+                  │                     ▲  MultipeerConnectivity
+Join tab ─────────┼── NearbySession.join(code) ── receives .hunt ── importHunt(into:) ── lobby "You're in!"
+ (typed code,     │
+  QRScannerView,  └─ "Start for everyone" ── NearbySession.startRace(at: now+4s) ── .start(at:) to every player
+  Camera-app link,
+  Siri JoinGameIntent)
+                                   ▼ (host and players, same Date)
+ContentView.launch(hunt, startAt) ──► PlayView (3-2-1 countdown) ──► HuntSession.start() ──► LiveActivityManager.start
+   PlayView "Snap it" ──► VerifyCameraView ──► CameraCaptureView + CameraSession ──► VisionMatcher.bestDistance → score
+   sustained match + verified still ──► HuntSession.clearCurrent() ──► LiveActivityManager.cleared (green state)
+   CheckpointClearedView ── "Next clue" or 3 s timer ──► HuntSession.advance() ──► LiveActivityManager.advance / end
+   last checkpoint ──► HuntFinishedView ──► ContentView.finish (bestTime, lastPlayedAt, NearbySession.stop)
+```
+
+- **Create → Host lobby:** `HostTab` lists your playable hunts (`!isJoined && isPlayable`); "Host this hunt" opens `HostLobbyView`, which flattens the hunt into a `HuntPackage` and starts advertising a 4-character `RoomCode`.
+- **Join:** `JoinTab` connects by typed code, the in-app QR scanner, a `quarry://join?code=XXXX` link (iPhone Camera app or Siri), then imports the received package as a joined hunt (`isJoined = true`) and waits in the lobby. If the host drops, "Start now" lets the player play offline.
+- **Synced start:** the host sends `.start(at:)` about 4 s in the future; `PlayView` counts down and calls `session.start()` at that instant on every phone. Solo play (`startAt == nil`) starts immediately.
+- **Play → Vision clear:** `CameraCaptureView` samples frames at ~5 Hz through `CameraSession.matchScore`, smooths the score, needs ≥ 0.85 (distance ≤ 0.5325) held briefly, then verifies a still photo before calling `onCleared` exactly once.
+- **Live Activity:** `HuntSession` is the only caller of `LiveActivityManager` (start → cleared → advance → end). Tapping the activity opens `quarry://camera`.
+- **Finish:** `HuntFinishedView` shows total and split times; `ContentView.finish` saves `bestTime`/`lastPlayedAt` and tears down the nearby connection.
+- **Siri / Shortcuts / Action Button:** `CurrentClueIntent` reads `HuntSession.active`; `SnapCheckpointIntent` opens `quarry://camera`; `JoinGameIntent` opens `quarry://join?code=XXXX`.
+- **Deep links:** `quarry://join?code=XXXX` → `ContentView.onOpenURL` → `RoomCode.code(from:)` → Join tab auto-joins. `quarry://camera` → `PlayView.onOpenURL` → camera for the current checkpoint (only while a game is open). A `.quarryhunt` file (AirDrop/Messages) → `ContentView.onOpenURL` → `ImportHuntSheet`.
+- **Dormant:** the live leaderboard (`Race/`). `RaceSession.begin(...)` is never called, so `isActive` is always false and race UI never shows. See `docs/phase0/DEAD_CODE.md`.
 
 ## Files
 
-### `Quarry/` (app root)
-| File | Owner | Contains |
-|---|---|---|
-| `Info.plist` | C | Extra Info.plist keys merged with the generated ones: `quarry://` URL scheme, `NSLocalNetworkUsageDescription`, `NSBonjourServices` (`_quarry-hunt._tcp/_udp`), `.quarryhunt` exported type + document type. Excluded from Copy Bundle Resources via a membership exception. |
-| `QuarryApp.swift` | C | `@main QuarryApp`: SwiftData container for Hunt/Checkpoint; forces light appearance for the ivory theme. |
-| `ContentView.swift` | B | `AppTab` and `ContentView`: Join/Host/Create tabs, themed accent, `GameLaunch` full-screen launcher with optional race start, completion history (lastPlayedAt/bestTime), Nearby teardown, demo seeding, stale activity cleanup, join deep links and file import confirmation. Shared `huntThumbnail` helper; private `IncomingPackage` and `ImportHuntSheet`. PlayView lives in Hunt/. |
-| `Item.swift` | n/a | Empty placeholder. Delete. |
-
-### `Quarry/Shared/` (contract; change only after telling the team)
-| File | Contains |
-|---|---|
-| `Models.swift` | `enum CheckpointKind { exactMatch, object }` · `@Model Hunt` (`title`, `createdAt`, `shareID: UUID`, `hostName`, `isJoined`, `lastPlayedAt`, `bestTime`, `checkpoints`, computed `orderedCheckpoints`, computed `isPlayable`) · `@Model Checkpoint` (`order`, `clue`, `kindRaw` + computed `kind`, `referencePrints: [Data]`, `thumbnail: Data?`, `targetLabel: String?`, `hunt`, **location:** `latitude: Double?`, `longitude: Double?`, `radiusMeters` (40), `requiresLocation` (false), computed `coordinate: CLLocationCoordinate2D?`; computed `isReady`). |
-| `HuntActivityAttributes.swift` | `nonisolated struct HuntActivityAttributes: ActivityAttributes`: fixed `huntTitle`, `totalCheckpoints`, `startDate`; `ContentState` = `checkpointIndex` (1-based), `clue`, `justCleared`. Preview samples: `.preview`, `.searching`, `.cleared`. **Compiled into both targets.** |
-| `HuntPackage.swift` | `HuntPackage` / `CheckpointPackage` (Codable, Sendable; `HuntPackage` is `Transferable` via `CodableRepresentation(contentType: .quarryHunt)`), `UTType.quarryHunt` ("com.quarryapp.hunt", `.quarryhunt`), `HuntPackage.load(from: URL)`. B adds `init(hunt:)` / `importHunt(into:)` in `Hunt/HuntPackage+SwiftData.swift`. |
-| `RaceMessages.swift` | `PlayerProgress`, `NearbyMessage` (`hello`, `hunt`, `start(at:)`, `progress`, `leaderboard`; `encoded()` / `decode(_:)`), `RoomCode` (`make()`, `joinURL(_:)` → `quarry://join?code=…`, `code(from:)`), `PlayerIdentity` (`id`, `name`, UserDefaults). |
-
-### `Quarry/Hunt/` (B)
-| File | Contains |
-|---|---|
-| `QuarryMetricView.swift` | `QuarryMetricView(title:value:systemImage:)`: reusable adaptive fact card for hunt counts, setup readiness, and elapsed time. |
-| `QuarryProgressView.swift` | `QuarryProgressView(cleared:total:)`: actual cleared-count progress with compact segments and a fallback bar for long hunts. |
-| `QuarryTheme.swift` | `QuarryTheme(colorScheme:)`: semantic light/dark colors and reusable typography/spacing tokens from DESIGN.md. Owned by B; no shared contract changes. |
-| `QuarryCardRow.swift` | `QuarryCardRow` ViewModifier: solid rounded native List row surface, padding, and Increased Contrast outline. |
-| `QuarryPrimaryButton.swift` | `QuarryPrimaryButton(title:systemImage:action:)`: native prominent Liquid Glass button with adaptive orange tint, semantic font, and growing label. |
-| `HuntThumbnail.swift` | `HuntThumbnail(data:)`: 56 pt photo or running-goose placeholder; decorative accessibility treatment. |
-| `HuntListRow.swift` | `HuntListRow(hunt:onStart:)`: adaptive hunt summary, checkpoint setup readiness, tappable summary, explicit Details navigation and prominent Start hunt button; start actions are disabled until isPlayable. No stored play progress. |
-| `HuntSession.swift` | `@Observable final class HuntSession`: `hunt`, `currentIndex`, `startDate`, `isFinished`, `splits: [TimeInterval]`, `lastClearedNumber`, `isAwaitingAdvance`; computed `checkpoints`, `current`, `progressText`, `lastSplit`, `totalTime`; methods `start()`, `clearCurrent()` (records the split + `LiveActivityManager.cleared` + arms a 3s auto-advance; does **not** advance), `advance()` (moves to the next checkpoint or finishes; guarded by `isAwaitingAdvance` so the button and timer run it once; calls `RaceSession.shared.reportProgress` when a race is active), `quit()` (cancels the timer + ends). **The only caller of `LiveActivityManager`.** Made `Identifiable` in `Hunt/PlayView.swift`. |
-| `PlayView.swift` | `PlayView(session:startAt:onClose:)`: `startAt: Date?` — nil = solo (caller already called `session.start()`), non-nil = race (3-2-1 countdown overlay shown; `session.start()` called at the synced time). Custom top bar (xmark End + running `.timer` + `list.number` leaderboard button when racing), QuarryProgressView cleared-count progress, compact "You're Nth" rank capsule when racing, "Checkpoint N of M", clue card, large "Open camera" button; presents `VerifyCameraView`, handles `quarry://camera`, success haptic; `LeaderboardView` sheet. Shows `CheckpointClearedView` while `isAwaitingAdvance`, and `HuntFinishedView` when `isFinished`. Private: `RaceCountdownView`. Holds `extension HuntSession: Identifiable` and the module-level `mmss(_:)` / `ordinal(_:)` helpers shared with the cleared/finished screens. |
-| `CheckpointClearedView.swift` | `CheckpointClearedView(session:)`: the "Checkpoint N cleared!" screen (themed verified-green checkmark, just-cleared checkpoint thumbnail, split time, "You're Nth" when racing, Next clue / Finish button → `session.advance()`). Presented by `PlayView` while `isAwaitingAdvance`; HuntSession's 3s auto-advance also dismisses it. |
-| `HuntFinishedView.swift` | `HuntFinishedView(session:onDone:)`: the themed goose finish screen (total time, per-checkpoint split-times list, then `LeaderboardView` when a race is active else a thumbnail grid, Done button). Presented by `PlayView` when `isFinished`. |
-| `RacePlaceholders.swift` | Empty placeholder; real Nearby implementations replace the old stubs. |
-| `CreateTab.swift` | Authored-hunt query, goose heading/empty state, ivory hunt cards with Details/guarded solo play, delete/share actions, title/checkpoint navigation, and host-name initialization; shared HuntRow for Host. |
-| `DemoData.swift` | `DemoData.seedIfEmpty(_ context:)`: inserts a 3-checkpoint "Birthday Hunt" (no reference photos yet). |
-| `HuntEditorView.swift` | `HuntEditorView(hunt:path:)`: `Form` to edit a `Hunt`'s title and list its `orderedCheckpoints` (clue + thumbnail). "Add checkpoint" creates a `Checkpoint` with the next `order` and pushes `CheckpointEditorView` by appending to the shared `NavigationPath`; swipe to delete (renormalizes `order`); drag to reorder (`EditButton`); deletes the hunt on exit if it's still an untouched "New Hunt". |
-| `CameraPicker.swift` | `CameraPicker(onImage:)`: `UIViewControllerRepresentable` wrapping `UIImagePickerController`; uses `.camera` on device, falls back to `.photoLibrary` in Simulator. Calls `onImage` then dismisses via `@Environment(\.dismiss)`. |
-| `CheckpointEditorView.swift` | `CheckpointEditorView(checkpoint:)`: `Form` with a clue `TextField` and a "Reference photos" section showing up to 3 thumbnails. Presents `CameraPicker`, calls `VisionMatcher.makeReferencePrint` on a detached background `Task`, appends to `checkpoint.referencePrints`, and stores a ≤300 px JPEG thumbnail. Shows `ProgressView` while processing and an inline red error on failure. |
-| `HuntPackage+SwiftData.swift` | `extension HuntPackage`: `init(hunt: Hunt)` (flattens all checkpoint fields including `referencePrints`, `thumbnail`, location, `shareID`, `hostName`) · `@discardableResult importHunt(into: ModelContext) -> Hunt` (finds existing `Hunt` by `shareID` via `FetchDescriptor + #Predicate`, replaces title/hostName/checkpoints, or inserts a new one). Private helper `makeCheckpoint(from:context:)`. |
-
-### `Quarry/Vision/` (A)
-| File | Contains |
-|---|---|
-| `VisionMatcher.swift` | `nonisolated enum VisionMatcher`: `makeReferencePrint(from: UIImage) throws -> Data` · `bestDistance(from: UIImage, to: [Data]) throws -> Float` (smaller = closer) · `score(forDistance:strong:weak:) -> Double` (0…1; **thresholds still need tuning**). Uses `VNGenerateImageFeaturePrintRequest` + `NSKeyedArchiver`. |
-| `VerifyCameraView.swift` | `VerifyCameraView(checkpoint:onCleared:)`: real back-camera preview, live matching ring, 85% threshold held for ~0.5 s, verified auto/manual capture, and exactly-once clearing. Empty references show “Reference photos needed”. Initializer unchanged. |
-| `CameraCaptureView.swift` | `CameraCaptureView(title:message:referencePrints:onCaptured:)` (title/message have defaults; optional referencePrints defaults to nil, preserving existing calls): reusable back-camera screen. Returns a `UIImage` on the main actor once per successful shutter tap; stays open for additional photos, caller may dismiss. Close/errors never invoke the callback. Handles permission, Settings, unavailable/interrupted camera, foreground lifecycle, rotation and last-photo preview. Optional verification samples at ~5 Hz, verifies stills, shows score/ring and retry errors, and rejects stale results after lifecycle changes. Private preview/status views. No Photos or SwiftData image persistence. |
-| `CameraSession.swift` | `CameraSession`: serial-queue AVFoundation session configuration, start/stop, still capture, latest-frame video delegate and `matchScore(references:rotationAngle:photo:)` for serialized off-main Vision comparisons; private photo delegate retained through capture completion. Internal implementation for `CameraCaptureView`. |
-
-### `Quarry/Nearby/` (A)
-| File | Contains |
-|---|---|
-| `NearbySession.swift` | Real MultipeerConnectivity hosting/joining, room codes, hunt transfer, synchronized start, reconnect handling, race-message forwarding and teardown. |
-| `HostTab.swift` | Lists playable/unfinished authored hunts, opens host lobby, routes to Create or launches the synchronized game. |
-| `HostLobbyView.swift` | `HostLobbyView(hunt:onStart:)`: QR/code, connected players, Start for everyone, lobby lifecycle. |
-| `JoinView.swift` | `JoinTab(linkCode:onStart:)`: name/code/QR entry, imports received hunts, lobby and synchronized launch, joined-game history; private GameRow. |
-| `QRCodeView.swift` | QR image generation and display. |
-| `QRScannerView.swift` | Camera QR scanning for room-code entry. |
-| `HuntTransfer.swift`, `NearbyDebugView.swift` | Empty placeholders; package conversion and production Join/Host screens supersede them. |
-
-### `Quarry/Race/` (C)
-| File | Contains |
-|---|---|
-| `RaceSession.swift` | `@Observable @MainActor RaceSession.shared`: `isActive`, `isHost`, `huntShareID`, `startDate`, sorted `players`, `me`, `myRank`, `racerCount`, `myID`; `sendHandler` (set by NearbySession; nil = solo); `begin(huntShareID:total:isHost:startAt:)`, `reportProgress(cleared:total:)`, `receive(_:)`, `rank(of:)`, `finishTime(of:)`, `end()`; `static sorted(_:)`; `static preview()` for #Previews. |
-| `LeaderboardView.swift` | `LeaderboardView(race: = .shared)`: list of `LeaderboardRow`s (rank badge, "You", segmented progress, finish time), spring reordering, selection haptic on rank change; empty state. Previews "Racing" / "Empty". |
-
-### `Quarry/Location/` (A) · stretch goal (contract in SPEC.md)
-| File | Contains |
-|---|---|
-| `LocationService.swift` | *(to be created)* `@Observable @MainActor LocationService.shared`: `location`, `authorization`, `demoMode` (UserDefaults), `start()`, `stop()`, `distance(to:)`, `bearing(to:)`, `isHere(at:)`; `enum Warmth` (freezing…onFire, `label`, `color`). |
-| `LocationPickerView.swift` | *(to be created)* `LocationPickerView(checkpoint:)`: map pin, radius slider, "Use my location", "Must be here" toggle. Embedded by B in `CheckpointEditorView`. |
-| `HotColdView.swift` | *(to be created)* `HotColdView(checkpoint:)`: warmth card with distance + direction arrow. Embedded by B in `PlayView`. |
-
-### `Quarry/LiveActivity/` (C)
-| File | Contains |
-|---|---|
-| `LiveActivityManager.swift` | `@MainActor final class LiveActivityManager`, `.shared`: `start(huntTitle:totalCheckpoints:firstClue:)` · `cleared(index:clue:) async` (green "cleared" state) · `advance(to:clue:) async` · `end(finalMessage:) async` (activity lingers 3 min) · `endAllStale() async`. Local updates only, no push. |
-
-### `QuarryWidgets/` (C; widget extension target)
-| File | Contains |
-|---|---|
-| `QuarryWidgetsBundle.swift` | `@main QuarryWidgetsBundle`, body = `HuntLiveActivity()` only. |
-| `QuarryWidgetsLiveActivity.swift` | `HuntLiveActivity: Widget` (Lock Screen view, Dynamic Island expanded/compact/minimal, `.supplementalActivityFamilies([.small])` for Watch, `widgetURL quarry://camera`) · `ElapsedTimer(start:)` · `LockScreenHuntView` (switches `watchLayout` / `phoneLayout` on `activityFamily`) · `#Preview`s for each presentation. |
-| `QuarryWidgets.swift`, `QuarryWidgetsControl.swift` | Empty placeholders. Delete. |
-| `Info.plist`, `Assets.xcassets` | Extension point config, widget colors. |
-
-### Project settings (C only, in `Quarry.xcodeproj/project.pbxproj`)
-- App Info.plist: generated keys (`NSSupportsLiveActivities = YES`, `NSCameraUsageDescription`, `NSLocationWhenInUseUsageDescription`) merged with `Quarry/Info.plist` (`INFOPLIST_FILE`).
-- Deployment target iOS 26.0. App target uses default MainActor isolation; the extension does not.
-- Membership exception: `Shared/HuntActivityAttributes.swift` → also in `QuarryWidgetsExtension`.
-
-## Repo root
+### Repo root
 | File | Purpose |
 |---|---|
-| `SPEC.md` | Scope, contracts, work split, timeline, demo, conventions, rules for agents. |
-| `DESIGN.md` | Visual design guide: ivory-white and orange semantic palette, native Apple and Liquid Glass rules, typography, components, screen layouts, and accessibility acceptance criteria; no app behavior changes. |
+| `README.md` | Judge/portfolio overview, Apple features, how to run, credits, roadmap. |
 | `MAP.md` | This file. |
-| `PLAN.md` | Afternoon plan (v3: joining + leaderboard): per-person tasks, agent prompts, cut order, demo script, checklist. |
-| `AGENTS.md`, `CLAUDE.md` | Point coding agents to `SPEC.md` + `MAP.md`. |
-| `README.md` | Quick team overview. |
+| `DESIGN.md` | The design system (colors, type, sky/grass scene, goose moods, glass-for-controls rule, components). |
+| `PLAN.md`, `SPEC.md` | **Archived** hackathon planning docs (afternoon plan; scope/contracts/rules). Superseded by README/MAP/DESIGN and `docs/phase0/`. |
+| `AGENTS.md`, `CLAUDE.md` | Identical instructions for coding agents (read MAP, keep contracts, update MAP). Still point at SPEC.md. |
+| `NIGHTLY_SUMMARY.md` | Report from the overnight Phase 0 run. |
+| `docs/phase0/` | `DEAD_CODE.md`, `THEME_MERGE_PLAN.md`, `ISSUES.md`: Phase 0 analysis and issue drafts. `ci.yml`: the CI workflow, waiting to be copied to `.github/workflows/`. |
+| `GooseChaseTests/` | Swift Testing unit tests + `README.md` on adding the test target. Not compiled until the target exists. |
+| `.github/workflows/ci.yml` | _(after copying from `docs/phase0/ci.yml`)_ GitHub Actions build and a commented-out test job. |
+| `IconLayers/` | Source PNG/SVG layers and previews for the Icon Composer icon. |
+| `.agents/skills/` | Agent skill packs (SwiftUI, SwiftData, Swift concurrency). Not part of the app. |
+| `Claude outputs/` | Scratch output from AI helpers (gitignored). |
+| `.gitignore` | Ignores `.DS_Store`, `xcuserdata/`, build output, `.swiftpm/`, `Claude outputs/`. |
 
+### `Quarry/` (app root)
+| File | What it does |
+|---|---|
+| `QuarryApp.swift` | `@main`: builds the SwiftData container (`Hunt`, `Checkpoint`), shows `ContentView`, forces light appearance. |
+| `ContentView.swift` | App shell: `AppTab` + Join/Host/Create `TabView`, the game launcher (`GameLaunch` → full-screen `PlayView`), `finish` (best time, Nearby teardown), `onOpenURL` for join links and `.quarryhunt` files, demo seeding, stale Live Activity cleanup; shared `huntThumbnail(_:size:)`; private `ImportHuntSheet`. |
+| `Info.plist` | Extra keys merged into the generated plist: `quarry://` URL scheme, Local Network usage + Bonjour `_quarry-hunt._tcp/_udp`, `.quarryhunt` exported UTType and document type, Siri alternative app names. |
+| `Assets.xcassets` | Accent color, app icon set, and two near-identical `GooseChase` / `GooseChase 1` folders (icon dataset + `d f` goose image); likely an accidental duplicate. |
+| `GooseChase.icon` | Icon Composer layered app icon (light/dark/tinted). |
 
-## App-wide appearance implementation
+### `Quarry/Design/` (brand look)
+| File | What it does |
+|---|---|
+| `Theme.swift` | `Brand` colors from the icon, `SkyBackground`, `GrassHill`/`GrassShape`, `.gooseProminent()` main-action button, `.skyCard()` (glass card; to be replaced). |
+| `GooseView.swift` | Animated goose mascot drawn with `Canvas` + `TimelineView`; `GooseMood` = `.running`, `.waiting`, `.honk`, `.celebrate`; still image with Reduce Motion. |
+| `HuntTabHeader.swift` | Sky + grass header with title, subtitle and running goose at the top of the Join/Host/Create lists. |
+| `HuntTabBackground.swift` | Pale-sky list background that keeps the status-bar area sky blue. |
+| `HuntTabSceneShape.swift` | Curved bottom edge for the tab header scene. |
 
-- `Hunt/QuarryTheme.swift` supplies the adaptive ivory canvas, warm-white cards, orange accent/highlight, charcoal/warm-gray text, and verified green to all app feature views. Public signatures and shared contracts are unchanged.
-- `Hunt/PlayView.swift` combines scrollable ivory clue/progress/metric cards and adaptive camera actions with synchronized countdown, rank, leaderboard, cleared and finished screens. Editor Forms retain the same palette.
-- Production Join/Host/QR flows replace the temporary debug screen and launcher.
-- `Race/LeaderboardView.swift` uses themed rows and rank badges, wrapped name/status layout, and respects Reduce Motion.
-- `Vision/CameraCaptureView.swift` retains camera/matching behavior; dark-backed controls use orange, glass Close, and green only after verification, with solid backings for Reduce Transparency.
-- `QuarryWidgets/QuarryWidgetsLiveActivity.swift` mirrors the palette in private `ActivityTheme` because it is a separate target; no project membership or shared-model changes.
-- `DESIGN.md` includes the complete existing-screen inventory and the native system-surface exceptions.
+### `Quarry/Hunt/` (create + play)
+| File | What it does |
+|---|---|
+| `CreateTab.swift` | Create tab: your authored hunts (`!isJoined`), New hunt, edit/play solo/share (AirDrop)/delete; defines `HuntRow` (also used by Host). |
+| `HuntEditorView.swift` | Edit a hunt: title, metric tiles, ordered checkpoints (add/delete/reorder); deletes an untouched "New Hunt" on exit. |
+| `CheckpointEditorView.swift` | Edit a checkpoint: clue, up to 3 reference photos → feature prints off the main thread, ≤300 px JPEG thumbnail. |
+| `CameraPicker.swift` | `UIImagePickerController` wrapper (camera on device, photo library in Simulator). |
+| `HuntSession.swift` | `@Observable` play state: current index, split times, cleared/advance guard with 3 s auto-advance, quit; the only caller of `LiveActivityManager`. |
+| `PlayView.swift` | Clue screen on the sky (top bar with End + timer, progress segments, clue card, Snap it), race countdown overlay, camera presentation, `quarry://camera`; module-level `mmss(_:)` and `ordinal(_:)`. |
+| `CheckpointClearedView.swift` | "Honk! Checkpoint N cleared" screen with thumbnail, split time, Next clue/Finish. |
+| `HuntFinishedView.swift` | Finish screen: total time, per-checkpoint splits, photo grid (or leaderboard when racing), Done. |
+| `HuntPackage+SwiftData.swift` | `HuntPackage(hunt:)` and `importHunt(into:)` (upsert by `shareID`). |
+| `DemoData.swift` | Seeds a 3-checkpoint "Birthday Hunt" (no photos) on first launch. |
+| `QuarryTheme.swift` | Cody's semantic palette + spacing/radius tokens (ivory/orange). Live; to be merged into `Brand`. |
+| `QuarryMetricView.swift` | Metric tile (title, value, symbol); used by `HuntEditorView`. |
 
-- Mockup hierarchy refinement: home introduction and hunt-card badges/actions, numbered editor rows and setup metrics, staged checkpoint editor, active progress/clue/metric cards with adaptive bottom actions, and completion summary. All use existing hunt data.
+### `Quarry/Nearby/` (joining + hosting)
+| File | What it does |
+|---|---|
+| `NearbySession.swift` | MultipeerConnectivity host/join by room code, hunt transfer, synced `.start(at:)`, retries/reconnects, forwards race messages to `RaceSession`; `MultipeerBridge` delegate. |
+| `JoinView.swift` | `JoinTab`: name, Scan QR / room code entry, connection status, lobby with offline "Start now" fallback, "Your games" (joined hunts, best times). |
+| `HostTab.swift` | Host tab: ready-to-host and needs-work hunts; opens `HostLobbyView`. |
+| `HostLobbyView.swift` | Host lobby: QR + big room code, joined players, Start solo / Start for everyone. |
+| `QRCodeView.swift` | Renders a crisp QR for a URL (Core Image). |
+| `QRScannerView.swift` | VisionKit `DataScannerViewController` QR scanner; accepts `quarry://join?code=` or a bare 4-character code. |
 
-- Playful polish: home uses a compact “Your hunts” heading and existing running-goose artwork (`d f` image asset); the goose also appears in the empty state, photo placeholders, and completion. Repeated camera badges and promotional slogans are removed. Primary buttons use native prominent Liquid Glass.
+### `Quarry/Vision/` (camera + matching)
+| File | What it does |
+|---|---|
+| `VisionMatcher.swift` | Feature prints: `makeReferencePrint(from:)`, `bestDistance(from:to:)` (whole frame, center crop, salient-object crop), `score(forDistance:strong:weak:)` (0.45 → 1, 1.0 → 0). |
+| `CameraSession.swift` | AVFoundation session on a serial queue, latest frame, still capture, smoothed `matchScore(references:rotationAngle:photo:)`. |
+| `CameraCaptureView.swift` | Full-screen camera: preview, match ring, 0.85 threshold, auto/manual verified capture, permission/retry states; also used for plain reference capture. |
+| `VerifyCameraView.swift` | Thin wrapper: `CameraCaptureView` with a checkpoint's clue and reference prints → `onCleared`. |
+
+### `Quarry/Intents/`
+| File | What it does |
+|---|---|
+| `GooseChaseIntents.swift` | `CurrentClueIntent`, `SnapCheckpointIntent`, `JoinGameIntent`, `GooseChaseShortcuts` phrases; `HuntSession.active` weak reference. |
+
+### `Quarry/LiveActivity/`
+| File | What it does |
+|---|---|
+| `LiveActivityManager.swift` | Starts/updates/ends the hunt Live Activity (local updates only, works with a free team); `endAllStale()`. |
+
+### `Quarry/Race/` (dormant live leaderboard)
+| File | What it does |
+|---|---|
+| `RaceSession.swift` | `@Observable` standings: merge/sort `PlayerProgress`, host broadcasts leaderboard, players send progress. **Dormant** — `begin` is never called, so every race branch elsewhere is dead at runtime; parked for Phase 2, not removed. |
+| `LeaderboardView.swift` | Leaderboard list with rank badges and progress segments (QuarryTheme colors). |
+
+### `Quarry/Shared/` (wire formats and models; change carefully)
+| File | What it does |
+|---|---|
+| `Models.swift` | SwiftData `Hunt` (title, shareID, hostName, isJoined, bestTime, checkpoints, `isPlayable`) and `Checkpoint` (clue, kind, referencePrints, thumbnail, targetLabel, optional location, `isReady`); `CheckpointKind`. |
+| `HuntPackage.swift` | Codable/Transferable `HuntPackage` + `CheckpointPackage`, `UTType.quarryHunt` (`com.quarryapp.hunt`), `load(from:)`. |
+| `RaceMessages.swift` | `PlayerProgress`, `NearbyMessage` (hello/hunt/start/progress/leaderboard), `RoomCode` (make, joinURL, code(from:)), `PlayerIdentity` (UserDefaults id + name). |
+| `HuntActivityAttributes.swift` | Live Activity attributes + `ContentState`; preview samples. **In both targets.** |
+
+### `QuarryWidgets/` (widget extension)
+| File | What it does |
+|---|---|
+| `QuarryWidgetsBundle.swift` | `@main` bundle containing only `HuntLiveActivity`. |
+| `QuarryWidgetsLiveActivity.swift` | `HuntLiveActivity`: Lock Screen, Dynamic Island (expanded/compact/minimal), Watch Smart Stack (`.supplementalActivityFamilies([.small])`), `widgetURL quarry://camera`; `HuntProgress`, `ProgressRing`, `ElapsedTimer`, `LockScreenHuntView`; previews. |
+| `ActivityGoose.swift` | Static goose drawing for the activity (mirrors Brand colors by hand). |
+| `ActivityMascot.swift` | Goose with a push transition between states (respects Reduce Motion / luminance). |
+| `ActivityGrass.swift` | Grass shape under the goose. |
+| `Info.plist`, `Assets.xcassets` | Extension point config, widget colors. |
+
+## Project settings (`Quarry.xcodeproj`)
+- Deployment target iOS 26.0; `SWIFT_VERSION = 5.0`; app target uses `SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor` and approachable concurrency.
+- Generated Info.plist keys: `NSCameraUsageDescription`, `NSLocationWhenInUseUsageDescription` (location is not built yet), `NSSupportsLiveActivities`, display name GooseChase; merged with `Quarry/Info.plist`.
+- Bundle IDs `rgs.Quarry` and `rgs.Quarry.QuarryWidgets`. The project-level and target-level `DEVELOPMENT_TEAM` values differ (team members' teams); set both to your Personal Team.
+- No shared scheme yet (schemes live in gitignored `xcuserdata/`). Share the `Quarry` scheme before relying on CI.
