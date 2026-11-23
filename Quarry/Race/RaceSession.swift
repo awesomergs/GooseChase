@@ -9,6 +9,10 @@
 //    host receives .hello/.progress → merges → broadcasts .leaderboard
 //    player receives .leaderboard  → replaces standings
 //
+//  Dormant until Phase 2: begin() is never called, so isActive is always false
+//  and every race branch elsewhere (PlayView, CheckpointClearedView, HuntFinishedView,
+//  HuntSession) is dead at runtime. Parked, not removed — see docs/phase0/DEAD_CODE.md.
+//
 
 import Foundation
 import Observation
