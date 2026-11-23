@@ -20,6 +20,13 @@
 			remoteGlobalIDString = A0413DD530A0FBFB00047453;
 			remoteInfo = QuarryWidgetsExtension;
 		};
+		A04AC0B430B3C67700E6CA18 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = A0413DBA30A0F9B600047453 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = A0413DC130A0F9B600047453;
+			remoteInfo = Quarry;
+		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -41,6 +48,7 @@
 		A0413DD630A0FBFB00047453 /* QuarryWidgetsExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = QuarryWidgetsExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		A0413DD830A0FBFB00047453 /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
 		A0413DDA30A0FBFB00047453 /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
+		A04AC0B030B3C67700E6CA18 /* GooseChaseTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = GooseChaseTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -85,6 +93,11 @@
 			path = QuarryWidgets;
 			sourceTree = "<group>";
 		};
+		A04AC0B130B3C67700E6CA18 /* GooseChaseTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = GooseChaseTests;
+			sourceTree = "<group>";
+		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -104,6 +117,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		A04AC0AD30B3C67700E6CA18 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -112,6 +132,7 @@
 			children = (
 				A0413DC430A0F9B600047453 /* Quarry */,
 				A0413DDC30A0FBFB00047453 /* QuarryWidgets */,
+				A04AC0B130B3C67700E6CA18 /* GooseChaseTests */,
 				A0413DD730A0FBFB00047453 /* Frameworks */,
 				A0413DC330A0F9B600047453 /* Products */,
 			);
@@ -122,6 +143,7 @@
 			children = (
 				A0413DC230A0F9B600047453 /* Quarry.app */,
 				A0413DD630A0FBFB00047453 /* QuarryWidgetsExtension.appex */,
+				A04AC0B030B3C67700E6CA18 /* GooseChaseTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -184,6 +206,29 @@
 			productReference = A0413DD630A0FBFB00047453 /* QuarryWidgetsExtension.appex */;
 			productType = "com.apple.product-type.app-extension";
 		};
+		A04AC0AF30B3C67700E6CA18 /* GooseChaseTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = A04AC0B630B3C67700E6CA18 /* Build configuration list for PBXNativeTarget "GooseChaseTests" */;
+			buildPhases = (
+				A04AC0AC30B3C67700E6CA18 /* Sources */,
+				A04AC0AD30B3C67700E6CA18 /* Frameworks */,
+				A04AC0AE30B3C67700E6CA18 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				A04AC0B530B3C67700E6CA18 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				A04AC0B130B3C67700E6CA18 /* GooseChaseTests */,
+			);
+			name = GooseChaseTests;
+			packageProductDependencies = (
+			);
+			productName = GooseChaseTests;
+			productReference = A04AC0B030B3C67700E6CA18 /* GooseChaseTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -199,6 +244,10 @@
 					};
 					A0413DD530A0FBFB00047453 = {
 						CreatedOnToolsVersion = 26.0.1;
+					};
+					A04AC0AF30B3C67700E6CA18 = {
+						CreatedOnToolsVersion = 26.0.1;
+						TestTargetID = A0413DC130A0F9B600047453;
 					};
 				};
 			};
@@ -218,6 +267,7 @@
 			targets = (
 				A0413DC130A0F9B600047453 /* Quarry */,
 				A0413DD530A0FBFB00047453 /* QuarryWidgetsExtension */,
+				A04AC0AF30B3C67700E6CA18 /* GooseChaseTests */,
 			);
 		};
 /* End PBXProject section */
@@ -231,6 +281,13 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		A0413DD430A0FBFB00047453 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		A04AC0AE30B3C67700E6CA18 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -254,6 +311,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		A04AC0AC30B3C67700E6CA18 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -261,6 +325,11 @@
 			isa = PBXTargetDependency;
 			target = A0413DD530A0FBFB00047453 /* QuarryWidgetsExtension */;
 			targetProxy = A0413DE830A0FBFD00047453 /* PBXContainerItemProxy */;
+		};
+		A04AC0B530B3C67700E6CA18 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = A0413DC130A0F9B600047453 /* Quarry */;
+			targetProxy = A04AC0B430B3C67700E6CA18 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -522,6 +591,48 @@
 			};
 			name = Release;
 		};
+		A04AC0B730B3C67700E6CA18 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 2YH978DCS2;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = rgs.GooseChaseTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Quarry.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Quarry";
+			};
+			name = Debug;
+		};
+		A04AC0B830B3C67700E6CA18 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 2YH978DCS2;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = rgs.GooseChaseTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Quarry.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Quarry";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -548,6 +659,15 @@
 			buildConfigurations = (
 				A0413DED30A0FBFD00047453 /* Debug */,
 				A0413DEE30A0FBFD00047453 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		A04AC0B630B3C67700E6CA18 /* Build configuration list for PBXNativeTarget "GooseChaseTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A04AC0B730B3C67700E6CA18 /* Debug */,
+				A04AC0B830B3C67700E6CA18 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
