@@ -70,12 +70,8 @@ struct VisionMatcherScoreTests {
         #expect(abs(VisionMatcher.score(forDistance: 0.4, strong: 0.2, weak: 0.6) - 0.5) < 1e-6)
     }
 
-    @Test("NaN distance should score 0")
+    @Test("NaN distance scores 0")
     func nanDistance() {
-        // NaN fails both comparisons, so the linear formula returns NaN.
-        // Vision shouldn't produce NaN, but a guard would make the ring safe. Known gap.
-        withKnownIssue("score(forDistance: .nan) returns NaN") {
-            #expect(VisionMatcher.score(forDistance: .nan) == 0)
-        }
+        #expect(VisionMatcher.score(forDistance: .nan) == 0)
     }
 }

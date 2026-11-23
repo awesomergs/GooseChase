@@ -39,6 +39,7 @@ nonisolated enum VisionMatcher {
     /// Maps a feature-print distance to a 0...1 "match" score for the ring.
     /// TODO(A): tune `strong`/`weak` by testing real objects. These are starting guesses.
     static func score(forDistance d: Float, strong: Float = 0.45, weak: Float = 1.0) -> Double {
+        if d.isNaN { return 0 }
         if d <= strong { return 1 }
         if d >= weak { return 0 }
         return Double((weak - d) / (weak - strong))
