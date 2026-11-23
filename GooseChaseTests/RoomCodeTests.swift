@@ -57,7 +57,7 @@ struct RoomCodeTests {
         ("quarry://join?code=KQ7X", "KQ7X"),
         ("quarry://join?code=kq7x", "KQ7X"),         // lowercase is uppercased
         ("quarry://join?code=Kq7X", "KQ7X"),         // mixed case
-        ("quarry://join?foo=1&code=ab12", "AB12"),   // extra query items are ignored
+        ("quarry://join?foo=1&code=ab23", "AB23"),   // extra query items are ignored
         ("quarry://join?code=AAAA&code=BBBB", "AAAA") // first code wins
     ])
     func validLinks(link: String, expected: String) throws {
@@ -79,29 +79,21 @@ struct RoomCodeTests {
         #expect(RoomCode.code(from: url) == nil)
     }
 
-    // MARK: Known gaps (documented, not fixed: no app code was changed)
-    // code(from:) does not validate the code itself. JoinTab and JoinGameIntent clean
-    // the code later, but a malformed link still switches to the Join tab and tries to join.
-    // When code(from:) starts validating, these known issues will "pass" and Swift Testing
-    // will flag them: then turn them into normal expectations.
+    // MARK: Malformed codes are rejected
 
-    @Test("empty code= should be rejected")
-    func emptyCodeIsAccepted() throws {
+    @Test("empty code= is rejected")
+    func emptyCodeIsRejected() throws {
         let url = try #require(URL(string: "quarry://join?code="))
-        withKnownIssue("code(from:) returns \"\" for an empty code") {
-            #expect(RoomCode.code(from: url) == nil)
-        }
+        #expect(RoomCode.code(from: url) == nil)
     }
 
-    @Test("codes that are not 4 alphabet characters should be rejected", arguments: [
+    @Test("codes that are not 4 alphabet characters are rejected", arguments: [
         "quarry://join?code=TOOLONG1",
         "quarry://join?code=AB",
         "quarry://join?code=O0I1"
     ])
-    func malformedCodesAreAccepted(link: String) throws {
+    func malformedCodesAreRejected(link: String) throws {
         let url = try #require(URL(string: link))
-        withKnownIssue("code(from:) does not check length or alphabet") {
-            #expect(RoomCode.code(from: url) == nil)
-        }
+        #expect(RoomCode.code(from: url) == nil)
     }
 }

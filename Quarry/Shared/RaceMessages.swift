@@ -40,8 +40,11 @@ nonisolated enum RoomCode {
     static func joinURL(_ code: String) -> URL { URL(string: "quarry://join?code=\(code)")! }
     static func code(from url: URL) -> String? {
         guard url.scheme == "quarry", url.host == "join" else { return nil }
-        return URLComponents(url: url, resolvingAgainstBaseURL: false)?
-            .queryItems?.first(where: { $0.name == "code" })?.value?.uppercased()
+        guard let value = URLComponents(url: url, resolvingAgainstBaseURL: false)?
+            .queryItems?.first(where: { $0.name == "code" })?.value else { return nil }
+        let code = value.uppercased()
+        guard code.count == 4, code.allSatisfy(alphabet.contains) else { return nil }
+        return code
     }
 }
 
