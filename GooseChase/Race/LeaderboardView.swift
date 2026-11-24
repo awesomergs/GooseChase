@@ -7,8 +7,6 @@
 import SwiftUI
 
 struct LeaderboardView: View {
-    @Environment(\.colorScheme) private var colorScheme
-    private var theme: QuarryTheme { QuarryTheme(colorScheme: colorScheme) }
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     var race: RaceSession = .shared
 
@@ -38,9 +36,8 @@ struct LeaderboardView: View {
             }
         }
         .scrollContentBackground(.hidden)
-        .background(theme.canvas)
-        .foregroundStyle(theme.primaryText)
-        .tint(theme.accent)
+        .background(Brand.canvas)
+        .foregroundStyle(Brand.textPrimary)
         .animation(reduceMotion ? nil : .spring(duration: 0.4), value: race.players.map(\.id))
         .sensoryFeedback(.selection, trigger: race.myRank)
         .navigationTitle("Leaderboard")
@@ -48,8 +45,6 @@ struct LeaderboardView: View {
 }
 
 struct LeaderboardRow: View {
-    @Environment(\.colorScheme) private var colorScheme
-    private var theme: QuarryTheme { QuarryTheme(colorScheme: colorScheme) }
     let rank: Int
     let player: PlayerProgress
     let isMe: Bool
@@ -65,13 +60,13 @@ struct LeaderboardRow: View {
                         .font(.body.weight(isMe ? .bold : .regular))
                     statusText
                         .font(.subheadline.monospacedDigit())
-                        .foregroundStyle(player.finishedAt != nil ? theme.verified : theme.secondaryText)
+                        .foregroundStyle(player.finishedAt != nil ? Brand.success : Brand.textSecondary)
                 }
                 CheckpointProgressBar(cleared: player.cleared, total: player.total, style: .onCard)
             }
         }
         .padding(.vertical, 4)
-        .listRowBackground(isMe ? theme.sand : theme.card)
+        .listRowBackground(isMe ? Brand.wing : Brand.surface)
         .accessibilityElement(children: .combine)
         .accessibilityLabel(accessibilityText)
     }
@@ -102,16 +97,14 @@ struct LeaderboardRow: View {
 }
 
 private struct RankBadge: View {
-    @Environment(\.colorScheme) private var colorScheme
-    private var theme: QuarryTheme { QuarryTheme(colorScheme: colorScheme) }
     let rank: Int
 
     var body: some View {
         Text("\(rank)")
             .font(.headline.monospacedDigit())
-            .foregroundStyle(rank == 1 ? theme.onAccent : theme.primaryText)
+            .foregroundStyle(rank == 1 ? Brand.ink : Brand.textPrimary)
             .frame(width: 32, height: 32)
-            .background(rank == 1 ? theme.accent : theme.sand, in: Circle())
+            .background(rank == 1 ? Brand.orange : Brand.wing, in: Circle())
             .accessibilityHidden(true)
     }
 }

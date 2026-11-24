@@ -17,7 +17,6 @@ struct CameraCaptureView: View {
     let onCaptured: (UIImage) -> Void
 
     @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
-    private let cameraTheme = QuarryTheme(colorScheme: .dark)
 
     @Environment(\.dismiss) private var dismiss
     @Environment(\.scenePhase) private var scenePhase
@@ -67,7 +66,6 @@ struct CameraCaptureView: View {
                     dismiss()
                 }
                 .buttonStyle(.glass)
-                .tint(cameraTheme.card)
                 Text(title)
                     .font(.headline)
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -105,13 +103,13 @@ struct CameraCaptureView: View {
                         ZStack {
                             Circle().stroke(.gray, lineWidth: 6)
                             Circle().trim(from: 0, to: matchScore)
-                                .stroke(didClear ? cameraTheme.verified : cameraTheme.primaryText,
+                                .stroke(didClear ? Brand.Camera.success : Brand.Camera.text,
                                         style: StrokeStyle(lineWidth: 6, lineCap: .round))
                                 .rotationEffect(.degrees(-90))
                                 .animation(reduceMotion ? nil : .easeOut(duration: 0.2), value: matchScore)
                             Image(systemName: didClear ? "checkmark" : "camera.fill")
                                 .font(.title)
-                                .foregroundStyle(cameraTheme.primaryText)
+                                .foregroundStyle(Brand.Camera.text)
                         }
                         .background(.black, in: .circle)
                         .frame(width: 72, height: 72)
@@ -122,7 +120,7 @@ struct CameraCaptureView: View {
                             .frame(maxWidth: .infinity, minHeight: 44)
                     }
                 }
-                .foregroundStyle(cameraTheme.onAccent)
+                .foregroundStyle(Brand.ink)
                 .buttonStyle(.borderedProminent)
                 .accessibilityLabel(isCapturing ? "Verifying photo" : "Take photo")
                 .disabled(!isReady || isCapturing || scenePhase != .active || didClear || referencePrints?.isEmpty == true)
@@ -131,7 +129,7 @@ struct CameraCaptureView: View {
             .background(.black.opacity(reduceTransparency ? 1 : 0.8))
         }
         .foregroundStyle(.white)
-        .tint(cameraTheme.accent)
+        .tint(Brand.Camera.accent)
         .sensoryFeedback(.success, trigger: didClear)
         .sensoryFeedback(.error, trigger: errorFeedback)
         .task(id: generation) { await monitorMatch() }
@@ -302,7 +300,6 @@ struct CameraCaptureView: View {
 
 private struct CameraStatusView: View {
     @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
-    private let theme = QuarryTheme(colorScheme: .dark)
     let status: String
     let accessDenied: Bool
     let openSettings: () -> Void
@@ -314,7 +311,7 @@ private struct CameraStatusView: View {
             Text(status).multilineTextAlignment(.center)
             if accessDenied {
                 Button("Open Settings", action: openSettings)
-                    .foregroundStyle(theme.onAccent)
+                    .foregroundStyle(Brand.ink)
                     .buttonStyle(.borderedProminent)
             } else {
                 Button("Try again", action: retry)
@@ -322,8 +319,8 @@ private struct CameraStatusView: View {
             }
         }
         .padding()
-        .foregroundStyle(theme.primaryText)
-        .tint(theme.accent)
+        .foregroundStyle(Brand.Camera.text)
+        .tint(Brand.Camera.accent)
         .background(.black.opacity(reduceTransparency ? 1 : 0.8), in: RoundedRectangle(cornerRadius: 16))
         .padding()
     }

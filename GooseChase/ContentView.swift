@@ -12,7 +12,6 @@ enum AppTab: Hashable {
 }
 
 struct ContentView: View {
-    @Environment(\.colorScheme) private var colorScheme
     @State private var selection: AppTab = .join
     @State private var game: GameLaunch?
     @State private var incomingPackage: IncomingPackage?
@@ -20,7 +19,6 @@ struct ContentView: View {
     @State private var linkCode: String?
 
     var body: some View {
-        let theme = QuarryTheme(colorScheme: colorScheme)
         TabView(selection: $selection) {
             Tab("Join", systemImage: "qrcode.viewfinder", value: AppTab.join) {
                 JoinTab(linkCode: $linkCode, onStart: launch)
@@ -49,9 +47,8 @@ struct ContentView: View {
                 incomingPackage = nil
             }
         }
-        .tint(theme.accent)
         .scrollContentBackground(.hidden)
-        .background(theme.canvas)
+        .background(Brand.canvas)
         .onOpenURL { url in
             if let code = RoomCode.code(from: url) {
                 selection = .join
@@ -139,7 +136,7 @@ private struct ImportHuntSheet: View {
             }
             .padding()
             .frame(maxWidth: .infinity)
-            .background(QuarryTheme(colorScheme: .light).canvas)
+            .background(Brand.canvas)
             .navigationTitle("New Hunt")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
