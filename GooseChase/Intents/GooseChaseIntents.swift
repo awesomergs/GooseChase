@@ -61,7 +61,7 @@ nonisolated struct SnapCheckpointIntent: AppIntent {
 
 // MARK: - Join a game
 
-nonisolated struct JoinGameIntent: AppIntent {
+struct JoinGameIntent: AppIntent {
     static let title: LocalizedStringResource = "Join a Game"
     static let description = IntentDescription("Join a nearby GooseChase hunt with its room code.")
 
