@@ -21,8 +21,8 @@ MultipeerConnectivity; there's a Live Activity on the Dynamic Island, Lock Scree
   Bonjour service `_quarry-hunt`.
 
 ## Build and test
-- Build: `xcodebuild -project GooseChase.xcodeproj -scheme Quarry -destination 'generic/platform=iOS Simulator' CODE_SIGNING_ALLOWED=NO build` (the scheme itself isn't renamed yet, see `docs/phase0/ISSUES.md` 0.3)
-- Tests: `xcodebuild test -project GooseChase.xcodeproj -scheme Quarry -destination 'platform=iOS Simulator,name=iPhone 17' CODE_SIGNING_ALLOWED=NO`
+- Build: `xcodebuild -project GooseChase.xcodeproj -scheme GooseChase -destination 'generic/platform=iOS Simulator' CODE_SIGNING_ALLOWED=NO build`
+- Tests: `xcodebuild test -project GooseChase.xcodeproj -scheme GooseChase -destination 'platform=iOS Simulator,name=iPhone 17' CODE_SIGNING_ALLOWED=NO`
   (if that simulator name doesn't exist, run `xcrun simctl list devices available` and pick one).
 - **Build after every change** and fix errors before moving on. Camera, Multipeer, Live Activity and Watch behavior can only be checked on
   Rohan's real devices; when a change needs that, stop and tell him exactly what to check.

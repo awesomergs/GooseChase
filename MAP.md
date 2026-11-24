@@ -2,7 +2,7 @@
 
 Where everything lives and what it does. **Read this before searching the codebase.** If you add, rename or delete a file, or change a public type or function, update this file in the same commit.
 
-_Rewritten 2026-11-19 from the actual file tree (not from the hackathon plan); renamed 2026-11-23 from the hackathon codename **Quarry** to **GooseChase** (project, targets, folders — issue 0.3). The scheme itself is still named `Quarry`, not yet renamed to match._
+_Rewritten 2026-11-19 from the actual file tree (not from the hackathon plan); renamed 2026-11-23 from the hackathon codename **Quarry** to **GooseChase** (project, targets, folders and scheme — issue 0.3, done)._
 
 ## Targets
 
@@ -153,4 +153,4 @@ ContentView.launch(hunt, startAt) ──► PlayView (3-2-1 countdown) ──►
 - Deployment target iOS 26.0; `SWIFT_VERSION = 5.0`; app target uses `SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor` and approachable concurrency.
 - Generated Info.plist keys: `NSCameraUsageDescription`, `NSLocationWhenInUseUsageDescription` (location is not built yet), `NSSupportsLiveActivities`, display name GooseChase; merged with `GooseChase/Info.plist`.
 - Bundle IDs `rgs.Quarry` and `rgs.Quarry.QuarryWidgets` — kept as-is through the rename on purpose.
-- Scheme is shared (`GooseChase.xcodeproj/xcshareddata/xcschemes/`) but still named `Quarry` and `QuarryWidgetsExtension` — not yet renamed to match (issue 0.3).
+- Scheme `GooseChase` (and widget scheme `GooseChaseWidgetsExtension`) shared at `GooseChase.xcodeproj/xcshareddata/xcschemes/`.

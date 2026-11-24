@@ -2,7 +2,7 @@
 
 Unit tests for the pure logic in the app, written with **Swift Testing** (`import Testing`, `@testable import GooseChase`). They need no camera, SwiftData container, MultipeerConnectivity or ActivityKit request, so they run in the Simulator in a few seconds.
 
-**Status:** the `GooseChaseTests` target exists and is wired into the `Quarry` scheme's Test action. All tests pass, 0 known issues.
+**Status:** the `GooseChaseTests` target exists and is wired into the `GooseChase` scheme's Test action. All tests pass, 0 known issues.
 
 | File | Covers |
 |---|---|
@@ -24,7 +24,7 @@ Unit tests for the pure logic in the app, written with **Swift Testing** (`impor
 
 ```sh
 xcodebuild test \
-  -project GooseChase.xcodeproj -scheme Quarry \
+  -project GooseChase.xcodeproj -scheme GooseChase \
   -destination 'platform=iOS Simulator,name=iPhone 17' \
   CODE_SIGNING_ALLOWED=NO
 ```

@@ -24,7 +24,7 @@ Built in about 8 hours at the iOSC Fall 2026 Hackathon with Swift and SwiftUI, f
 
 ## Running it
 - Xcode 26, iOS 26, a real iPhone (the camera, Live Activities and nearby play need a device).
-- Open `GooseChase.xcodeproj`, choose the **Quarry** scheme (not yet renamed to match), set Signing to your own team, then build and run.
+- Open `GooseChase.xcodeproj`, choose the **GooseChase** scheme, set Signing to your own team, then build and run.
 - For nearby play, install on two or more phones and allow **Local Network** when asked.
 
 ## Project map
@@ -41,7 +41,7 @@ See `MAP.md` (every file and how the flows connect) and `DESIGN.md` (the design 
 GooseChase was built at the **iOSC Fall 2026 Hackathon** (Sunday, November 8, 2026) with two teammates. Since then, it's continued **solo as a portfolio project**: clean-up, documentation, tests and CI first, then matching quality and new gameplay (see the roadmap below).
 
 ## Status / roadmap
-The project, targets and folders have been renamed from the hackathon codename **Quarry** to **GooseChase** (the scheme is the one piece still pending), keeping the `quarry://` link scheme, the `com.quarryapp.hunt` file type and the `_quarry-hunt` Bonjour service so existing QR codes and builds keep working.
+The project, targets, folders and scheme have all been renamed from the hackathon codename **Quarry** to **GooseChase**, keeping the `quarry://` link scheme, the `com.quarryapp.hunt` file type and the `_quarry-hunt` Bonjour service so existing QR codes and builds keep working.
 
 | Phase | Focus | Highlights |
 |---|---|---|
