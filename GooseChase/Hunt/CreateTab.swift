@@ -43,11 +43,9 @@ struct CreateTab: View {
                         Text("A great chase starts with a clue")
                             .font(.headline)
                         Text("Tap New hunt, then add checkpoints with photos of the things you want friends to find.")
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(Brand.textSecondary)
                     }
-                    .padding(18)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .background(Color(.secondarySystemGroupedBackground), in: .rect(cornerRadius: 22))
+                    .brandCard()
                     .padding(.horizontal, 16)
                     .listRowInsets(EdgeInsets())
                     .listRowBackground(Color.clear)
@@ -79,8 +77,7 @@ struct CreateTab: View {
                         .buttonStyle(.bordered)
                         .tint(Brand.ink)
                     }
-                    .padding(18)
-                    .background(Color(.secondarySystemGroupedBackground), in: .rect(cornerRadius: 22))
+                    .brandCard()
                     .padding(.horizontal, 16)
                     .listRowInsets(EdgeInsets())
                     .listRowBackground(Color.clear)
@@ -93,7 +90,7 @@ struct CreateTab: View {
                             } label: {
                                 Label("Play", systemImage: "play.fill")
                             }
-                            .tint(.green)
+                            .tint(Brand.success)
                         }
                     }
                     .swipeActions(edge: .trailing) {
@@ -167,7 +164,7 @@ struct HuntRow: View {
                     Label(hunt.checkpoints.isEmpty ? "Add checkpoints" : "Needs photos",
                           systemImage: "exclamationmark.circle.fill")
                         .font(.caption)
-                        .foregroundStyle(.orange)
+                        .foregroundStyle(Brand.warning)
                 }
             }
         }

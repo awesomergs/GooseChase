@@ -35,9 +35,7 @@ struct HostTab: View {
                             .gooseProminent()
                             .foregroundStyle(Brand.ink)
                     }
-                    .padding(18)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .background(Color(.secondarySystemGroupedBackground), in: .rect(cornerRadius: 22))
+                    .brandCard()
                     .padding(.horizontal, 16)
                     .listRowInsets(EdgeInsets())
                     .listRowBackground(Color.clear)
@@ -51,7 +49,7 @@ struct HostTab: View {
                             HuntRow(hunt: hunt)
                             Label("Ready", systemImage: "checkmark.circle.fill")
                                 .font(.subheadline.weight(.semibold))
-                                .foregroundStyle(Color(red: 0.18, green: 0.46, blue: 0.23))
+                                .foregroundStyle(Brand.success)
                             Button {
                                 lobbyHunt = hunt
                             } label: {
@@ -62,8 +60,7 @@ struct HostTab: View {
                             .gooseProminent()
                             .foregroundStyle(Brand.ink)
                         }
-                        .padding(18)
-                        .background(Color(.secondarySystemGroupedBackground), in: .rect(cornerRadius: 22))
+                        .brandCard()
                         .padding(.horizontal, 16)
                         .listRowInsets(EdgeInsets())
                         .listRowBackground(Color.clear)
@@ -83,9 +80,7 @@ struct HostTab: View {
                                 Image(systemName: "pencil")
                                     .accessibilityHidden(true)
                             }
-                            .padding(18)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .background(Color(.secondarySystemGroupedBackground), in: .rect(cornerRadius: 22))
+                            .brandCard()
                         }
                         .buttonStyle(.plain)
                         .accessibilityHint("Opens your hunts in the Create tab.")

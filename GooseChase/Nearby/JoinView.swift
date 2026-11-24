@@ -114,8 +114,7 @@ struct JoinTab: View {
                     .textContentType(.givenName)
                     .submitLabel(.next)
                     .onSubmit { focusedField = .code }
-                    .padding(12)
-                    .background(Color(.tertiarySystemFill), in: .rect(cornerRadius: 12))
+                    .brandField()
 
                 Button {
                     focusedField = nil
@@ -148,8 +147,7 @@ struct JoinTab: View {
                     .focused($focusedField, equals: .code)
                     .submitLabel(.done)
                     .onSubmit { focusedField = nil }
-                    .padding(12)
-                    .background(Color(.tertiarySystemFill), in: .rect(cornerRadius: 12))
+                    .brandField()
                     .onChange(of: code) { _, newValue in
                         let cleaned = String(newValue.uppercased().filter { $0.isLetter || $0.isNumber }.prefix(4))
                         if cleaned != newValue { code = cleaned }
@@ -159,19 +157,16 @@ struct JoinTab: View {
 
                 Text("Scan the host's QR code or enter their code. Stay close to their phone.")
                     .font(.footnote)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Brand.textSecondary)
             }
-            .padding(18)
-            .background(Color(.secondarySystemGroupedBackground), in: .rect(cornerRadius: 22))
+            .brandCard()
             .padding(.horizontal, 16)
             .listRowInsets(EdgeInsets())
             .listRowBackground(Color.clear)
 
             if nearby.status != .idle && nearby.status != .hosting {
                 statusRow
-                    .padding(18)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .background(Color(.secondarySystemGroupedBackground), in: .rect(cornerRadius: 22))
+                    .brandCard()
                     .padding(.horizontal, 16)
                     .listRowInsets(EdgeInsets())
                     .listRowBackground(Color.clear)
@@ -187,9 +182,7 @@ struct JoinTab: View {
                         if hunt.isPlayable { onStart(hunt, nil) }
                     } label: {
                         GameRow(hunt: hunt)
-                            .padding(16)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .background(Color(.secondarySystemGroupedBackground), in: .rect(cornerRadius: 20))
+                            .brandCard()
                     }
                     .buttonStyle(.plain)
                     .disabled(!hunt.isPlayable)
@@ -226,13 +219,13 @@ struct JoinTab: View {
         case .failed(let message):
             VStack(alignment: .leading, spacing: 8) {
                 Label(message, systemImage: "exclamationmark.triangle.fill")
-                    .foregroundStyle(.orange)
+                    .foregroundStyle(Brand.warning)
                 Button("Try again") { startJoin() }
                     .disabled(code.count != 4)
             }
         case .disconnected:
             Label("Lost the host. Move closer and try again.", systemImage: "wifi.exclamationmark")
-                .foregroundStyle(.orange)
+                .foregroundStyle(Brand.warning)
         case .idle, .hosting:
             EmptyView()
         }
