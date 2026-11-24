@@ -8,8 +8,6 @@ import SwiftUI
 import SwiftData
 
 struct CheckpointEditorView: View {
-    @Environment(\.colorScheme) private var colorScheme
-    private var theme: QuarryTheme { QuarryTheme(colorScheme: colorScheme) }
     @Bindable var checkpoint: Checkpoint
 
     @State private var capturedImages: [UIImage] = []
@@ -29,7 +27,7 @@ struct CheckpointEditorView: View {
                     .font(.system(.title3, design: .rounded).weight(.semibold))
                     .padding(.vertical, 8)
             }
-            .listRowBackground(theme.card)
+            .listRowBackground(Brand.surface)
 
             // MARK: Reference photos
             Section {
@@ -43,7 +41,7 @@ struct CheckpointEditorView: View {
                                     .resizable()
                                     .scaledToFill()
                                     .frame(width: 80, height: 80)
-                                    .clipShape(RoundedRectangle(cornerRadius: QuarryTheme.thumbnailRadius))
+                                    .clipShape(RoundedRectangle(cornerRadius: Metrics.thumbRadius))
                                     .accessibilityLabel("Reference photo \(index + 1)")
                             }
                         }
@@ -56,13 +54,13 @@ struct CheckpointEditorView: View {
                     VStack(alignment: .leading, spacing: 12) {
                         Image(systemName: "camera.viewfinder")
                             .font(.largeTitle)
-                            .foregroundStyle(theme.accent)
+                            .foregroundStyle(Brand.orange)
                             .accessibilityHidden(true)
                         Text("Give the camera something to recognize.")
-                            .font(QuarryTheme.heading)
+                            .font(Metrics.heading)
                         Text("Photograph the object from a few angles. Players will match it with their camera.")
                             .font(.subheadline)
-                            .foregroundStyle(theme.secondaryText)
+                            .foregroundStyle(Brand.textSecondary)
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.vertical, 12)
@@ -74,7 +72,7 @@ struct CheckpointEditorView: View {
                         ProgressView()
                         Text("Processing photo…")
                             .font(.subheadline)
-                            .foregroundStyle(theme.secondaryText)
+                            .foregroundStyle(Brand.textSecondary)
                     }
                 } else if checkpoint.referencePrints.count < 3 {
                     Button {
@@ -99,9 +97,9 @@ struct CheckpointEditorView: View {
                 Text("02 · Add reference photos")
             } footer: {
                 Text("\(checkpoint.referencePrints.count) of 3 added. Try a few angles so the camera can recognize it.")
-                    .foregroundStyle(theme.secondaryText)
+                    .foregroundStyle(Brand.textSecondary)
             }
-            .listRowBackground(theme.card)
+            .listRowBackground(Brand.surface)
         }
         .scrollDismissesKeyboard(.interactively)
         .toolbar {
@@ -114,16 +112,15 @@ struct CheckpointEditorView: View {
         }
         .onDisappear { isEditingText = false }
         .scrollContentBackground(.hidden)
-        .background(theme.canvas)
-        .foregroundStyle(theme.primaryText)
-        .tint(theme.accent)
+        .background(Brand.canvas)
+        .foregroundStyle(Brand.textPrimary)
         .navigationTitle("Checkpoint \(checkpoint.order + 1)")
         .navigationBarTitleDisplayMode(.inline)
         .sheet(isPresented: $showingPicker) {
             CameraPicker { image in
                 handlePickedImage(image)
             }
-            .presentationBackground(theme.card)
+            .presentationBackground(Brand.surface)
         }
         .onAppear {
             // Seed the display with the saved thumbnail so the strip shows up on re-open.

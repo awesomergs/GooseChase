@@ -8,9 +8,7 @@ import SwiftUI
 import SwiftData
 
 struct HuntEditorView: View {
-    @Environment(\.colorScheme) private var colorScheme
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
-    private var theme: QuarryTheme { QuarryTheme(colorScheme: colorScheme) }
     @Bindable var hunt: Hunt
     @Binding var path: NavigationPath
     @Environment(\.modelContext) private var context
@@ -39,7 +37,7 @@ struct HuntEditorView: View {
                     .font(.system(.title2, design: .rounded).bold())
                     .padding(.vertical, 8)
             }
-            .listRowBackground(theme.card)
+            .listRowBackground(Brand.surface)
 
             Section("Checkpoints") {
                 ForEach(hunt.orderedCheckpoints) { cp in
@@ -47,20 +45,20 @@ struct HuntEditorView: View {
                         HStack(spacing: 12) {
                             Text(cp.order + 1, format: .number)
                                 .font(.headline.monospacedDigit())
-                                .foregroundStyle(theme.primaryText)
+                                .foregroundStyle(Brand.textPrimary)
                                 .frame(minWidth: 32, minHeight: 32)
-                                .background(theme.sand, in: .circle)
+                                .background(Brand.wing, in: .circle)
                                 .accessibilityLabel("Checkpoint \(cp.order + 1)")
                             thumbnail(for: cp.thumbnail)
                             VStack(alignment: .leading, spacing: 6) {
                                 Text(cp.clue.isEmpty ? "New checkpoint" : cp.clue)
                                     .font(.headline)
-                                    .foregroundStyle(cp.clue.isEmpty ? theme.secondaryText : theme.primaryText)
+                                    .foregroundStyle(cp.clue.isEmpty ? Brand.textSecondary : Brand.textPrimary)
                                     .fixedSize(horizontal: false, vertical: true)
                                 Label(cp.isReady ? "Ready to play" : "Needs reference photos",
                                       systemImage: cp.isReady ? "camera.fill" : "camera.badge.ellipsis")
                                     .font(.subheadline)
-                                    .foregroundStyle(theme.secondaryText)
+                                    .foregroundStyle(Brand.textSecondary)
                             }
                         }
                     }
@@ -74,7 +72,7 @@ struct HuntEditorView: View {
                     Label("Add checkpoint", systemImage: "plus")
                 }
             }
-            .listRowBackground(theme.card)
+            .listRowBackground(Brand.surface)
         }
         .scrollDismissesKeyboard(.interactively)
         .toolbar {
@@ -87,9 +85,8 @@ struct HuntEditorView: View {
         }
         .onDisappear { isEditingText = false }
         .scrollContentBackground(.hidden)
-        .background(theme.canvas)
-        .foregroundStyle(theme.primaryText)
-        .tint(theme.accent)
+        .background(Brand.canvas)
+        .foregroundStyle(Brand.textPrimary)
         .navigationTitle("Hunt details")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
@@ -144,9 +141,9 @@ struct HuntEditorView: View {
                 .clipShape(RoundedRectangle(cornerRadius: 8))
         } else {
             Image(systemName: "photo")
-                .foregroundStyle(theme.secondaryText)
+                .foregroundStyle(Brand.textSecondary)
                 .frame(width: 44, height: 44)
-                .background(theme.sand, in: RoundedRectangle(cornerRadius: 8))
+                .background(Brand.wing, in: RoundedRectangle(cornerRadius: 8))
         }
     }
 }
