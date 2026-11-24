@@ -177,15 +177,7 @@ struct PlayView: View {
     }
 
     private var progressBar: some View {
-        HStack(spacing: 6) {
-            ForEach(session.checkpoints.indices, id: \.self) { i in
-                Capsule()
-                    .fill(segmentColor(for: i))
-                    .frame(height: 7)
-                    .frame(maxWidth: .infinity)
-            }
-        }
-        .animation(.spring(duration: 0.4), value: session.currentIndex)
+        CheckpointProgressBar(cleared: session.currentIndex, total: session.checkpoints.count, style: .onSky)
     }
 
     /// Rank pill shown below the progress bar during a race.
@@ -199,16 +191,6 @@ struct PlayView: View {
                 .padding(.vertical, 4)
                 .background(Brand.orange, in: Capsule())
                 .animation(.spring(duration: 0.3), value: rank)
-        }
-    }
-
-    private func segmentColor(for index: Int) -> Color {
-        if index < session.currentIndex {
-            Brand.grass                  // cleared
-        } else if index == session.currentIndex {
-            .white                       // current
-        } else {
-            .white.opacity(0.3)          // upcoming
         }
     }
 

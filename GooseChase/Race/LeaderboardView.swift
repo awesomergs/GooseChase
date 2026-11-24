@@ -67,8 +67,7 @@ struct LeaderboardRow: View {
                         .font(.subheadline.monospacedDigit())
                         .foregroundStyle(player.finishedAt != nil ? theme.verified : theme.secondaryText)
                 }
-                ProgressSegments(cleared: player.cleared, total: player.total,
-                                 finished: player.finishedAt != nil)
+                CheckpointProgressBar(cleared: player.cleared, total: player.total, style: .onCard)
             }
         }
         .padding(.vertical, 4)
@@ -114,26 +113,6 @@ private struct RankBadge: View {
             .frame(width: 32, height: 32)
             .background(rank == 1 ? theme.accent : theme.sand, in: Circle())
             .accessibilityHidden(true)
-    }
-}
-
-private struct ProgressSegments: View {
-    @Environment(\.colorScheme) private var colorScheme
-    private var theme: QuarryTheme { QuarryTheme(colorScheme: colorScheme) }
-    let cleared: Int
-    let total: Int
-    let finished: Bool
-
-    var body: some View {
-        HStack(spacing: 3) {
-            ForEach(0..<max(total, 1), id: \.self) { i in
-                Capsule()
-                    .fill(i < cleared ? theme.verified
-                                      : theme.secondaryText.opacity(0.2))
-                    .frame(height: 5)
-            }
-        }
-        .accessibilityHidden(true)
     }
 }
 
