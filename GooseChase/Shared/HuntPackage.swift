@@ -2,7 +2,7 @@
 //  HuntPackage.swift  ·  SHARED CONTRACT (C). Change only after telling the team.
 //  A hunt flattened into plain Codable data so it can travel between phones:
 //  as a .quarryhunt file (AirDrop / Messages) or over the nearby connection.
-//  B writes the conversions to/from SwiftData in Quarry/Hunt/HuntPackage+SwiftData.swift.
+//  B writes the conversions to/from SwiftData in GooseChase/Hunt/HuntPackage+SwiftData.swift.
 //
 
 import CoreTransferable
@@ -31,7 +31,7 @@ nonisolated struct CheckpointPackage: Codable, Sendable, Hashable {
 }
 
 extension UTType {
-    /// Declared in Quarry/Info.plist (UTExportedTypeDeclarations), file extension .quarryhunt
+    /// Declared in GooseChase/Info.plist (UTExportedTypeDeclarations), file extension .quarryhunt
     nonisolated static let quarryHunt = UTType(exportedAs: "com.quarryapp.hunt")
 }
 

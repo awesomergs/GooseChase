@@ -10,7 +10,7 @@ import UIKit
 // so the main-thread preview layer can display it, never to configure it.
 nonisolated final class CameraSession: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate, @unchecked Sendable {
     let session = AVCaptureSession()
-    private let queue = DispatchQueue(label: "Quarry.camera")
+    private let queue = DispatchQueue(label: "GooseChase.camera")
     private let photoOutput = AVCapturePhotoOutput()
     private let videoOutput = AVCaptureVideoDataOutput()
     private let imageContext = CIContext()

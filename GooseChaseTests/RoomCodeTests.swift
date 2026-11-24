@@ -1,12 +1,12 @@
 //
 //  RoomCodeTests.swift  ·  GooseChaseTests
-//  RoomCode (Quarry/Shared/RaceMessages.swift): room-code generation and the
+//  RoomCode (GooseChase/Shared/RaceMessages.swift): room-code generation and the
 //  quarry://join?code=XXXX link format used by QR codes, the iPhone Camera app and Siri.
 //
 
 import Foundation
 import Testing
-@testable import Quarry
+@testable import GooseChase
 
 @MainActor
 @Suite("RoomCode")

@@ -1,7 +1,7 @@
 //
 //  HuntPackageTests.swift  ·  GooseChaseTests
-//  HuntPackage / CheckpointPackage (Quarry/Shared/HuntPackage.swift) and NearbyMessage
-//  (Quarry/Shared/RaceMessages.swift): the wire formats sent over AirDrop (.quarryhunt files)
+//  HuntPackage / CheckpointPackage (GooseChase/Shared/HuntPackage.swift) and NearbyMessage
+//  (GooseChase/Shared/RaceMessages.swift): the wire formats sent over AirDrop (.quarryhunt files)
 //  and MultipeerConnectivity. A change that breaks these round-trips breaks joining between
 //  phones on different builds. Pure Codable tests: no SwiftData, no networking.
 //
@@ -9,7 +9,7 @@
 import Foundation
 import Testing
 import UniformTypeIdentifiers
-@testable import Quarry
+@testable import GooseChase
 
 @MainActor
 @Suite("HuntPackage wire format")

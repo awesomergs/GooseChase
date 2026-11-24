@@ -7,7 +7,7 @@
 //  Player: join(code:)            → finds the host with that code → receives the hunt → waits for .start
 //  Both:   send(_:) / race messages are forwarded to RaceSession.shared
 //
-//  Requires (already in Quarry/Info.plist): NSLocalNetworkUsageDescription and
+//  Requires (already in GooseChase/Info.plist): NSLocalNetworkUsageDescription and
 //  NSBonjourServices = _quarry-hunt._tcp / _quarry-hunt._udp.
 //
 

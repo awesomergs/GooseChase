@@ -36,7 +36,7 @@ nonisolated enum NearbyMessage: Codable, Sendable {
 nonisolated enum RoomCode {
     static let alphabet = Array("ABCDEFGHJKLMNPQRSTUVWXYZ23456789")
     static func make() -> String { String((0..<4).map { _ in alphabet.randomElement()! }) }
-    /// The QR code / link format: quarry://join?code=KQ7X (scanning with the iPhone Camera app opens Quarry).
+    /// The QR code / link format: quarry://join?code=KQ7X (scanning with the iPhone Camera app opens GooseChase).
     static func joinURL(_ code: String) -> URL { URL(string: "quarry://join?code=\(code)")! }
     static func code(from url: URL) -> String? {
         guard url.scheme == "quarry", url.host == "join" else { return nil }

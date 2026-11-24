@@ -1,13 +1,13 @@
 //
-//  QuarryApp.swift
-//  Quarry
+//  GooseChaseApp.swift
+//  GooseChase
 //
 
 import SwiftUI
 import SwiftData
 
 @main
-struct QuarryApp: App {
+struct GooseChaseApp: App {
     var sharedModelContainer: ModelContainer = {
         let schema = Schema([Hunt.self, Checkpoint.self])
         let configuration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)

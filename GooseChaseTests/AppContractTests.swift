@@ -2,13 +2,13 @@
 //  AppContractTests.swift  ·  GooseChaseTests
 //  Guards the values that must survive the Quarry → GooseChase rename: the quarry:// URL scheme,
 //  the Bonjour service type, and PlayerIdentity's stable ID.
-//  Needs a HOSTED test target (Host Application = Quarry, the default for an app's unit test
+//  Needs a HOSTED test target (Host Application = GooseChase, the default for an app's unit test
 //  bundle) so Bundle.main is the app and its Info.plist is readable.
 //
 
 import Foundation
 import Testing
-@testable import Quarry
+@testable import GooseChase
 
 @MainActor
 @Suite("App contracts (keep through the rename)")
@@ -17,7 +17,7 @@ struct AppContractTests {
     @Test("Info.plist registers the quarry:// URL scheme")
     func urlScheme() throws {
         let types = try #require(Bundle.main.object(forInfoDictionaryKey: "CFBundleURLTypes") as? [[String: Any]],
-                                 "Is the test target hosted in the Quarry app?")
+                                 "Is the test target hosted in the GooseChase app?")
         let schemes = types.flatMap { $0["CFBundleURLSchemes"] as? [String] ?? [] }
         #expect(schemes.contains("quarry"))
     }

@@ -1,6 +1,6 @@
 //
 //  VisionMatcherScoreTests.swift  ·  GooseChaseTests
-//  VisionMatcher.score(forDistance:strong:weak:) (Quarry/Vision/VisionMatcher.swift):
+//  VisionMatcher.score(forDistance:strong:weak:) (GooseChase/Vision/VisionMatcher.swift):
 //  maps a feature-print distance to the 0...1 match score shown on the camera ring.
 //  Defaults: strong = 0.45 (score 1), weak = 1.0 (score 0), linear in between.
 //  CameraCaptureView clears at score >= 0.85, i.e. distance <= 0.5325.
@@ -9,7 +9,7 @@
 
 import Foundation
 import Testing
-@testable import Quarry
+@testable import GooseChase
 
 @MainActor
 @Suite("VisionMatcher.score(forDistance:)")

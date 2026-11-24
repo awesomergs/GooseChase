@@ -1,13 +1,13 @@
 //
 //  RaceSessionTests.swift  ·  GooseChaseTests
-//  Pure parts of the (currently dormant) live leaderboard in Quarry/Race/.
+//  Pure parts of the (currently dormant) live leaderboard in GooseChase/Race/.
 //  Only static functions are used, so RaceSession.shared is never created.
-//  If you delete Quarry/Race (docs/phase0/DEAD_CODE.md, Option B), delete this file too.
+//  If you delete GooseChase/Race (docs/phase0/DEAD_CODE.md, Option B), delete this file too.
 //
 
 import Foundation
 import Testing
-@testable import Quarry
+@testable import GooseChase
 
 @MainActor
 @Suite("RaceSession standings")

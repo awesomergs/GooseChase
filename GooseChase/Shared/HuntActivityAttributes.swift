@@ -1,5 +1,5 @@
 //
-//  HuntActivityAttributes.swift  ·  SHARED by the app AND the QuarryWidgetsExtension target
+//  HuntActivityAttributes.swift  ·  SHARED by the app AND the GooseChaseWidgetsExtension target
 //  (already set up in the project file; don't move this file).
 //
 

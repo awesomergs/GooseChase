@@ -1,12 +1,12 @@
 //
 //  HelperTests.swift  ·  GooseChaseTests
-//  Small pure helpers: mmss(_:) and ordinal(_:) (module-level, in Quarry/Hunt/PlayView.swift),
+//  Small pure helpers: mmss(_:) and ordinal(_:) (module-level, in GooseChase/Hunt/PlayView.swift),
 //  CheckpointKind raw values, and the Live Activity ContentState size budget.
 //
 
 import Foundation
 import Testing
-@testable import Quarry
+@testable import GooseChase
 
 @MainActor
 @Suite("Time and rank formatting")

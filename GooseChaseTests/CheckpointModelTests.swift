@@ -1,6 +1,6 @@
 //
 //  CheckpointModelTests.swift  ·  GooseChaseTests
-//  Computed properties on the SwiftData Checkpoint model (Quarry/Shared/Models.swift).
+//  Computed properties on the SwiftData Checkpoint model (GooseChase/Shared/Models.swift).
 //  These create @Model objects WITHOUT a ModelContainer and never touch relationships,
 //  which SwiftData allows for plain attribute access. If they ever crash on a newer SDK
 //  ("no container" style traps), wrap them in an in-memory ModelContainer or delete this file;
@@ -10,7 +10,7 @@
 import CoreLocation
 import Foundation
 import Testing
-@testable import Quarry
+@testable import GooseChase
 
 @MainActor
 @Suite("Checkpoint model")
