@@ -2,7 +2,7 @@
 
 Where everything lives and what it does. **Read this before searching the codebase.** If you add, rename or delete a file, or change a public type or function, update this file in the same commit.
 
-_Rewritten 2026-11-19 from the actual file tree (not from the hackathon plan); renamed 2026-11-23 from the hackathon codename **Quarry** to **GooseChase** (project, targets, folders and scheme — issue 0.3, done)._
+_Rewritten 2026-11-19 from the actual file tree (not from the hackathon plan); renamed 2026-11-23 from the hackathon codename **Quarry** to **GooseChase** (project, targets, folders and scheme — issue 0.3, done); theme-merged 2026-11-23 (`theme-merge` branch) into one `Brand` design system — `QuarryTheme`/`QuarryMetricView` deleted, glass removed from content, `HuntTabHeader`/`HuntTabBackground`/`HuntTabSceneShape`/`huntThumbnail` renamed (issues 0.4/0.5, done)._
 
 ## Targets
 
@@ -68,19 +68,23 @@ ContentView.launch(hunt, startAt) ──► PlayView (3-2-1 countdown) ──►
 | File | What it does |
 |---|---|
 | `GooseChaseApp.swift` | `@main`: builds the SwiftData container (`Hunt`, `Checkpoint`), shows `ContentView`, forces light appearance. |
-| `ContentView.swift` | App shell: `AppTab` + Join/Host/Create `TabView`, the game launcher (`GameLaunch` → full-screen `PlayView`), `finish` (best time, Nearby teardown), `onOpenURL` for join links and `.quarryhunt` files, stale Live Activity cleanup; shared `huntThumbnail(_:size:)`; private `ImportHuntSheet`. |
+| `ContentView.swift` | App shell: `AppTab` + Join/Host/Create `TabView`, the game launcher (`GameLaunch` → full-screen `PlayView`), `finish` (best time, Nearby teardown), `onOpenURL` for join links and `.quarryhunt` files, stale Live Activity cleanup; private `ImportHuntSheet`. One app-wide tint (`Brand.sky`, set once at the root). |
 | `Info.plist` | Extra keys merged into the generated plist: `quarry://` URL scheme, Local Network usage + Bonjour `_quarry-hunt._tcp/_udp`, `.quarryhunt` exported UTType and document type, Siri alternative app names. |
 | `Assets.xcassets` | Accent color and the `GooseChase` icon dataset (`d f` goose image). |
 | `GooseChase.icon` | Icon Composer layered app icon (light/dark/tinted). |
 
-### `GooseChase/Design/` (brand look)
+### `GooseChase/Design/` (one brand system — colors, cards, components)
 | File | What it does |
 |---|---|
-| `Theme.swift` | `Brand` colors from the icon, `SkyBackground`, `GrassHill`/`GrassShape`, `.gooseProminent()` main-action button, `.skyCard()` (glass card; to be replaced). |
+| `Theme.swift` | `Brand` colors (icon colors + semantic roles `canvas`/`surface`/`textPrimary`/`textSecondary`/`success`/`warning`/`skyDeep`), `Brand.Camera` (scrim/text/accent/success for camera overlays), `Metrics` (spacing/radius tokens), `SkyBackground`, `GrassHill`/`GrassShape`, `.gooseProminent()` main-action button. |
+| `Card.swift` | `.brandCard(_: CardStyle)` (`.plain`, `.onSky`, `.tinted` — solid content card, Increased-Contrast outline), `.brandField()` (text-field well), `StatusPill` (solid capsule for non-interactive labels). Liquid Glass is for controls only; these are what content uses instead. |
+| `MetricTile.swift` | Title + big rounded value + symbol card; used by `HuntEditorView`. |
+| `CheckpointProgressBar.swift` | Checkpoint progress: segments for ≤ 12 checkpoints, a bar otherwise; `.onSky` (play screen) and `.onCard` (leaderboard) color styles; one spoken label. |
+| `HuntThumbnailView.swift` | A hunt's thumbnail (first checkpoint's photo) or a flag placeholder. |
+| `SceneHeader.swift` | Sky + grass header with title, subtitle and running goose at the top of the Join/Host/Create lists. |
+| `TabPageBackground.swift` | Pale-sky list background that keeps the status-bar area sky blue. |
+| `SceneHeaderShape.swift` | Curved bottom edge for the tab header scene. |
 | `GooseView.swift` | Animated goose mascot drawn with `Canvas` + `TimelineView`; `GooseMood` = `.running`, `.waiting`, `.honk`, `.celebrate`; still image with Reduce Motion. |
-| `HuntTabHeader.swift` | Sky + grass header with title, subtitle and running goose at the top of the Join/Host/Create lists. |
-| `HuntTabBackground.swift` | Pale-sky list background that keeps the status-bar area sky blue. |
-| `HuntTabSceneShape.swift` | Curved bottom edge for the tab header scene. |
 
 ### `GooseChase/Hunt/` (create + play)
 | File | What it does |
@@ -94,8 +98,6 @@ ContentView.launch(hunt, startAt) ──► PlayView (3-2-1 countdown) ──►
 | `CheckpointClearedView.swift` | "Honk! Checkpoint N cleared" screen with thumbnail, split time, Next clue/Finish. |
 | `HuntFinishedView.swift` | Finish screen: total time, per-checkpoint splits, photo grid (or leaderboard when racing), Done. |
 | `HuntPackage+SwiftData.swift` | `HuntPackage(hunt:)` and `importHunt(into:)` (upsert by `shareID`). |
-| `QuarryTheme.swift` | Cody's semantic palette + spacing/radius tokens (ivory/orange). Live; to be merged into `Brand`. |
-| `QuarryMetricView.swift` | Metric tile (title, value, symbol); used by `HuntEditorView`. |
 
 ### `GooseChase/Nearby/` (joining + hosting)
 | File | What it does |

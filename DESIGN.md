@@ -1,6 +1,6 @@
 # GooseChase design system
 
-_Restructured 2026-11-19 around the unified design system proposed in `docs/phase0/THEME_MERGE_PLAN.md`. Much of the guidance below (native-first rules, typography and spacing tokens, the glass rules, camera overlays, accessibility acceptance) is Cody's from the hackathon `DESIGN.md`, kept and re-pointed at the GooseChase brand. Where the code does not match yet, the merge plan says how to get there._
+_Restructured 2026-11-19 around the unified design system proposed in `docs/phase0/THEME_MERGE_PLAN.md`; the merge itself landed 2026-11-23 (`theme-merge` branch). Much of the guidance below (native-first rules, typography and spacing tokens, the glass rules, camera overlays, accessibility acceptance) is Cody's from the hackathon `DESIGN.md`, kept and re-pointed at the GooseChase brand._
 
 ## 1. Direction
 
@@ -16,32 +16,33 @@ Follow [Apple's Human Interface Guidelines](https://developer.apple.com/design/h
 
 ## 3. Color
 
-One palette: `Brand` in `GooseChase/Design/Theme.swift`. The roles marked _(planned)_ come from the merge plan and replace `QuarryTheme`.
+One palette: `Brand` (+ `Brand.Camera`, `Metrics`) in `GooseChase/Design/Theme.swift`. `QuarryTheme` is gone.
 
 | Token | Hex | Use |
 |---|---|---|
 | `Brand.sky` | `#3FA2E0` | Sky gradient (top), app tint, tab bar selection |
 | `Brand.skyLight` | `#5BB8EC` | Sky gradient (bottom) |
-| `Brand.skyDeep` _(planned)_ | `#1F6FA5` | Tinted cards and pills that carry white text (5.4:1) |
+| `Brand.skyDeep` | `#1F6FA5` | Tinted cards and pills that carry white text (5.4:1) |
 | `Brand.orange` | `#F28C28` | **The one main action** per screen (`.gooseProminent()`), goose beak and legs |
 | `Brand.grass` / `grassDark` | `#5DBB63` / `#4CA554` | Grass scene, cleared progress segments, checkmark fills. Decoration only: never text |
 | `Brand.ink` | `#1E2A33` | Primary text, label on orange buttons (5.97:1) |
-| `Brand.wing` | `#D5DEE5` | Goose wing, neutral fills |
-| `Brand.canvas` _(planned)_ | `#F4F9FD` | Page background under lists |
-| `Brand.surface` _(planned)_ | white | Content cards |
-| `Brand.textSecondary` _(planned)_ | `#5B6B76` | Supporting copy on canvas/cards (5.2:1) |
-| `Brand.success` _(planned)_ | `#2F7A3A` | "Ready", "Cleared", "Verified" text and icons on light surfaces (5.3:1) |
-| `Brand.warning` _(planned)_ | system orange | "Needs photos" and connection warnings, always with a symbol |
-| `Brand.Camera.*` _(planned)_ | black scrim, white text, orange accent, `#8EC9A5` success | Camera overlays on live video |
+| `Brand.wing` | `#D5DEE5` | Goose wing, neutral fills (checkpoint number badge, placeholder tiles) |
+| `Brand.canvas` | `#F4F9FD` | Page background under lists |
+| `Brand.surface` | white | Content cards |
+| `Brand.textPrimary` | = `Brand.ink` | Primary text on cards |
+| `Brand.textSecondary` | `#5B6B76` | Supporting copy on canvas/cards (5.2:1+, verified in `GooseChaseTests/ThemeContrastTests.swift`) |
+| `Brand.success` | `#2F7A3A` | "Ready", "Cleared", "Verified" text and icons on light surfaces (5.3:1+) |
+| `Brand.warning` | system orange | "Needs photos" and connection warnings, always with a symbol |
+| `Brand.Camera.*` | black scrim, white text, orange accent, `#8EC9A5` success | Camera overlays on live video |
 
 Rules:
 
 - Orange signals the main action or selection. Avoid decorative orange borders and large orange backgrounds.
 - Green means cleared/verified, never "promising score". Pair it with a checkmark and the word.
-- **White text on `Brand.sky` is only 2.8:1.** Put body text on a card (`.brandCard`) or on `skyDeep`; large headlines directly on the sky need a subtle shadow and an on-device check with Increased Contrast.
-- Contrast targets (Cody): 4.5:1 normal text, 3:1 large text and essential control edges/status graphics. Don't lower text opacity to make hierarchy.
+- **White text on `Brand.sky` is only 2.8:1.** Put body text on a card (`.brandCard`) or on `skyDeep`; large headlines directly on the sky need a subtle shadow and an on-device check with Increased Contrast. This is a deliberate, documented exception (`ThemeContrastTests.whiteOnSkyIsKnownException`), not an oversight.
+- Contrast targets (Cody): 4.5:1 normal text, 3:1 large text and essential control edges/status graphics. Don't lower text opacity to make hierarchy. `GooseChaseTests/ThemeContrastTests.swift` checks every card/pill text pair against these targets — run it before changing any `Brand` color.
 - Errors use system red with a label and symbol.
-- The widget extension can't see `Brand`; it mirrors these values by hand (`ActivityGoose`, `QuarryWidgetsLiveActivity`). Keep them in sync or share a palette file (merge plan step 13).
+- The widget extension can't see `Brand`; it mirrors these values by hand (`ActivityGoose`, `QuarryWidgetsLiveActivity`), and the hex values already match. Sharing a palette file instead would need a target-membership change in Xcode (like `HuntActivityAttributes.swift`'s); not done in the theme merge — see `docs/phase0/REVIEW.md`.
 
 ## 4. Typography
 
@@ -66,9 +67,9 @@ Rules:
 | Spacing scale | 4, 8, 12, 16, 24, 32 pt |
 | `related` (text gap) | 8 |
 | `item` (card-to-card) | 12 |
-| `cardPadding` | 16 (20 for the main clue) |
+| `cardPadding` | 16 |
 | `section` | 24 |
-| `cardRadius` | 20 (today's code mixes 20/22/24; standardize on 20) |
+| `cardRadius` | 20 — every `brandCard`/`MetricTile` (the old 20/22/24 mix is gone) |
 | `thumbRadius` / `thumbSize` | 12 / 56 |
 | `minTap` | 44 × 44 for every interactive target |
 | Main button | at least 50 pt tall, grows with text |
@@ -82,8 +83,8 @@ At accessibility text sizes stack metadata and actions vertically, let cards gro
 |---|---|
 | `SkyBackground(grassHeight:)` | Full-screen sky + grass: play, countdown, cleared, finished, join lobby, host lobby |
 | `GrassHill` / `GrassShape` | Wavy two-tone grass strip |
-| `HuntTabHeader` → `SceneHeader` _(rename planned)_ | Sky/grass header with the running goose at the top of each tab |
-| `HuntTabBackground` → `TabPageBackground` _(rename planned)_ | Pale-sky list background that keeps the status bar sky blue |
+| `SceneHeader` | Sky/grass header with the running goose at the top of each tab |
+| `TabPageBackground` | Pale-sky list background that keeps the status bar sky blue |
 
 Lists, forms and editors use the canvas; the full sky is for "you are in the game" moments.
 
@@ -104,25 +105,27 @@ Hackathon guidebook rule: **Liquid Glass is for controls** (buttons, toolbars, t
 
 - Let system bars and the tab bar provide their own glass. Don't paint over them or add glass to controls already styled by their container.
 - Floating custom controls (End hunt ×, leaderboard, camera Close) use `.buttonStyle(.glass)`. Use `.glassProminent` sparingly; the main action is the solid orange `.gooseProminent()`.
-- One glass treatment per control; no glass on glass. Group neighboring glass controls in a `GlassEffectContainer`.
-- **Content** (clue card, split times, lobby players, photo placeholders, status labels) uses a solid or tinted rounded card: `.brandCard(.onSky)`, `.brandCard(.tinted)`, or `StatusPill`. Today's `.skyCard()` and five other content views still use glass; the full list and replacements are in `docs/phase0/THEME_MERGE_PLAN.md` §3.
-- Respect Reduce Transparency and Increased Contrast. Over live video, glass is never a contrast guarantee: use a dark scrim.
+- One glass treatment per control; no glass on glass. Group neighboring glass controls in a `GlassEffectContainer` (`PlayView.topBar` does this for the End-hunt ×, timer `StatusPill` and leaderboard button).
+- **Content** (clue card, split times, lobby players, photo placeholders, status labels) uses a solid or tinted rounded card: `.brandCard(.onSky)`, `.brandCard(.tinted)`, or `StatusPill`. No content view uses `.glassEffect`/`.skyCard` any more — `grep -rn glassEffect GooseChase` returns nothing outside `.buttonStyle(.glass)` controls.
+- Respect Reduce Transparency and Increased Contrast. Over live video, glass is never a contrast guarantee: use a dark scrim (`Brand.Camera.scrim`).
 
 ## 9. Components
 
-| Component | Status | Notes |
+All live, one system, in `GooseChase/Design/`.
+
+| Component | File | Notes |
 |---|---|---|
-| `.gooseProminent()` | live | Solid orange capsule, ink label, large. One per screen. |
-| Secondary button | live | Native `.bordered` (tinted ink or sky) or plain. |
-| `.brandCard(_:)` (`.plain`, `.onSky`, `.tinted`) | planned | Replaces `.skyCard`, `QuarryCardRow` and the 8 hand-rolled grouped cards. Solid, radius 20, padding 16, outline under Increased Contrast (from Cody's `QuarryCardRow`). |
-| `.brandField()` | planned | Text-field well on the Join form. |
-| `StatusPill` | planned | Solid capsule for non-interactive labels (split time, rank, timer). |
-| `MetricTile` | planned (from `QuarryMetricView`) | Title + big rounded value + symbol, grows with Dynamic Type. |
-| `CheckpointProgressBar` | planned (from `PlayView.progressBar` + `QuarryProgressView`) | Segments for ≤ 12 checkpoints, bar otherwise; on the sky: grass/white/faded, on cards: success/orange/neutral; one spoken label. |
-| `HuntThumbnailView` | planned (from `huntThumbnail()`) | Rounded photo or flag placeholder. |
-| `HuntRow` | live | Thumbnail, title, checkpoint count, setup warning. |
-| `GooseView`, `SkyBackground`, `SceneHeader` | live | See sections 6–7. |
-| Empty / error state | live | `ContentUnavailableView` where it fits; explain and offer the existing recovery action; inline errors sit beside the field with text and symbol. |
+| `.gooseProminent()` | `Theme.swift` | Solid orange capsule, ink label, large. One per screen. |
+| Secondary button | — | Native `.bordered` (tinted ink or sky) or plain. |
+| `.brandCard(_:)` (`.plain`, `.onSky`, `.tinted`) | `Card.swift` | Solid, radius 20, padding 16, outline under Increased Contrast. Replaced `.skyCard` and every hand-rolled grouped card. |
+| `.brandField()` | `Card.swift` | Text-field well on the Join form. |
+| `StatusPill` | `Card.swift` | Solid capsule for non-interactive labels (split time, rank, timer). |
+| `MetricTile` | `MetricTile.swift` | Title + big rounded value + symbol, grows with Dynamic Type. Replaced `QuarryMetricView`. |
+| `CheckpointProgressBar` | `CheckpointProgressBar.swift` | Segments for ≤ 12 checkpoints, bar otherwise; `.onSky`: grass/white/faded, `.onCard`: success/orange/wing; one spoken label. Replaced `PlayView.progressBar` and the leaderboard's `ProgressSegments`. |
+| `HuntThumbnailView` | `HuntThumbnailView.swift` | Rounded photo or flag placeholder. Replaced the `huntThumbnail(_:)` free function. |
+| `HuntRow` | `Hunt/CreateTab.swift` | Thumbnail, title, checkpoint count, setup warning. |
+| `GooseView`, `SkyBackground`, `SceneHeader`, `TabPageBackground` | `GooseView.swift`, `Theme.swift`, `SceneHeader.swift`, `TabPageBackground.swift` | See sections 6–7. |
+| Empty / error state | — | `ContentUnavailableView` where it fits; explain and offer the existing recovery action; inline errors sit beside the field with text and symbol. |
 
 ## 10. Camera (Cody)
 
@@ -147,4 +150,4 @@ Before calling a screen done, check on device:
 ## 13. History
 
 - **Hackathon (Nov 8, 2026):** Cody's ivory-white + orange `QuarryTheme` system and the original version of this guide, alongside the sky/grass/goose brand in `Quarry/Design/` that most screens ended up using. Both systems shipped in the hackathon build.
-- **Phase 0 (now):** one system named for GooseChase; glass only on controls. Migration steps: `docs/phase0/THEME_MERGE_PLAN.md` §4.
+- **Phase 0 theme merge (2026-11-23, `theme-merge` branch):** one `Brand` system; `QuarryTheme` and `QuarryMetricView` deleted; glass removed from every content view (controls keep it); `HuntTabHeader`/`HuntTabBackground`/`HuntTabSceneShape`/`huntThumbnail` renamed to `SceneHeader`/`TabPageBackground`/`SceneHeaderShape`/`HuntThumbnailView`. Full change list and screenshots: `docs/phase0/REVIEW.md` (gitignored, local only).

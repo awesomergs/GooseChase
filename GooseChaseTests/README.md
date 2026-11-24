@@ -13,6 +13,7 @@ Unit tests for the pure logic in the app, written with **Swift Testing** (`impor
 | `CheckpointModelTests.swift` | `Checkpoint.isReady`, `kind`, `coordinate`, defaults (model objects without a container) |
 | `RaceSessionTests.swift` | `RaceSession.sorted(_:)`, `LeaderboardRow.format` (delete if you remove `GooseChase/Race/`) |
 | `AppContractTests.swift` | `quarry://` scheme and Bonjour service in Info.plist, `NearbySession.serviceType`, `PlayerIdentity.id` (needs a hosted target) |
+| `ThemeContrastTests.swift` | WCAG contrast ratios (4.5:1 body / 3:1 large) for every `Brand` text/background pair used on cards, pills and the main button; documents the deliberate white-on-sky exception |
 
 ## Run from Xcode
 
