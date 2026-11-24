@@ -218,12 +218,14 @@ struct PlayView: View {
         VStack(spacing: 8) {
             Text("Clue")
                 .font(.subheadline.weight(.semibold))
-                .foregroundStyle(.white.opacity(0.85))
+                .foregroundStyle(Brand.textSecondary)
             Text(session.current?.clue ?? "")
                 .font(.title2.weight(.bold))
+                .foregroundStyle(Brand.textPrimary)
                 .multilineTextAlignment(.center)
         }
-        .skyCard()
+        .frame(maxWidth: .infinity)
+        .brandCard(.onSky)
     }
 }
 

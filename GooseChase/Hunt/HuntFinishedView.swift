@@ -25,7 +25,7 @@ struct HuntFinishedView: View {
 
             ScrollView {
                 splitTimes
-                    .skyCard(cornerRadius: 20)
+                    .brandCard(.onSky)
 
                 if RaceSession.shared.isActive {
                     LeaderboardView()
@@ -64,11 +64,12 @@ struct HuntFinishedView: View {
                 HStack {
                     Label("Checkpoint \(index + 1)", systemImage: "checkmark.circle.fill")
                         .symbolRenderingMode(.palette)
-                        .foregroundStyle(.white, Brand.grass)
+                        .foregroundStyle(Brand.textPrimary, Brand.success)
                     Spacer()
                     if session.splits.indices.contains(index) {
                         Text(mmss(session.splits[index]))
                             .monospacedDigit()
+                            .foregroundStyle(Brand.textPrimary)
                     }
                 }
                 .font(.subheadline)

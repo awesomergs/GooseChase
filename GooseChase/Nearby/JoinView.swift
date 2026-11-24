@@ -266,7 +266,8 @@ struct JoinTab: View {
                     Text("Waiting for \(hostName) to start…")
                         .font(.headline)
                 }
-                .skyCard(cornerRadius: 20)
+                .frame(maxWidth: .infinity)
+                .brandCard(.tinted)
             } else {
                 // Safety net: the connection dropped, but we already have the hunt.
                 VStack(spacing: 12) {
