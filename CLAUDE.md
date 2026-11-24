@@ -1,4 +1,4 @@
-# Agent instructions: GooseChase (code name Quarry)
+# Agent instructions: GooseChase
 
 Solo portfolio project by Rohan George. It started at the iOSC Fall 2026 Hackathon (team: Rohan, Cody, teammate B).
 GooseChase is an iOS 26 SwiftUI scavenger-hunt app: on-device Vision checks finds; nearby multiplayer uses
@@ -13,16 +13,16 @@ MultipeerConnectivity; there's a Live Activity on the Dynamic Island, Lock Scree
 ## Project facts
 - Xcode 26, iOS 26, Swift 5 language mode with **MainActor default isolation** and approachable concurrency.
   Types used off the main actor (Vision helpers, Canvas drawing, App Intents, Shape) are marked `nonisolated`.
-- Folders are Xcode *synchronized groups*: any file inside `Quarry/` joins the app target and any file inside `QuarryWidgets/` joins the widget
-  target automatically. `Quarry/Shared/HuntActivityAttributes.swift` is shared with the widget via a membership exception.
+- Folders are Xcode *synchronized groups*: any file inside `GooseChase/` joins the app target and any file inside `GooseChaseWidgets/` joins the widget
+  target automatically. `GooseChase/Shared/HuntActivityAttributes.swift` is shared with the widget via a membership exception.
 - Free Apple **Personal Team only**: no push, CloudKit, App Groups, TestFlight or App Clips. Don't add capabilities that need a paid account.
 - No third-party packages, no backend.
 - Keep these working even after the rename: the `quarry://` URL scheme (`quarry://join?code=XXXX`, `quarry://camera`), UTType `com.quarryapp.hunt`,
   Bonjour service `_quarry-hunt`.
 
 ## Build and test
-- Build: `xcodebuild -project Quarry.xcodeproj -scheme Quarry -destination 'generic/platform=iOS Simulator' CODE_SIGNING_ALLOWED=NO build`
-- Tests (once the `GooseChaseTests` target exists): `xcodebuild test -project Quarry.xcodeproj -scheme Quarry -destination 'platform=iOS Simulator,name=iPhone 17' CODE_SIGNING_ALLOWED=NO`
+- Build: `xcodebuild -project GooseChase.xcodeproj -scheme Quarry -destination 'generic/platform=iOS Simulator' CODE_SIGNING_ALLOWED=NO build` (the scheme itself isn't renamed yet, see `docs/phase0/ISSUES.md` 0.3)
+- Tests: `xcodebuild test -project GooseChase.xcodeproj -scheme Quarry -destination 'platform=iOS Simulator,name=iPhone 17' CODE_SIGNING_ALLOWED=NO`
   (if that simulator name doesn't exist, run `xcrun simctl list devices available` and pick one).
 - **Build after every change** and fix errors before moving on. Camera, Multipeer, Live Activity and Watch behavior can only be checked on
   Rohan's real devices; when a change needs that, stop and tell him exactly what to check.

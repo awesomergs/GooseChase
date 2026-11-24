@@ -1,6 +1,6 @@
 # GooseChaseTests
 
-Unit tests for the pure logic in the app, written with **Swift Testing** (`import Testing`, `@testable import Quarry`). They need no camera, SwiftData container, MultipeerConnectivity or ActivityKit request, so they run in the Simulator in a few seconds.
+Unit tests for the pure logic in the app, written with **Swift Testing** (`import Testing`, `@testable import GooseChase`). They need no camera, SwiftData container, MultipeerConnectivity or ActivityKit request, so they run in the Simulator in a few seconds.
 
 **Status:** the `GooseChaseTests` target exists and is wired into the `Quarry` scheme's Test action. All tests pass, 0 known issues.
 
@@ -11,12 +11,12 @@ Unit tests for the pure logic in the app, written with **Swift Testing** (`impor
 | `HuntPackageTests.swift` | `HuntPackage` JSON round-trip, `load(from:)`, `UTType.quarryHunt`; `NearbyMessage` round-trip for every case |
 | `HelperTests.swift` | `mmss(_:)`, `ordinal(_:)`, `CheckpointKind` raw values, Live Activity `ContentState` round-trip and 4 KB budget |
 | `CheckpointModelTests.swift` | `Checkpoint.isReady`, `kind`, `coordinate`, defaults (model objects without a container) |
-| `RaceSessionTests.swift` | `RaceSession.sorted(_:)`, `LeaderboardRow.format` (delete if you remove `Quarry/Race/`) |
+| `RaceSessionTests.swift` | `RaceSession.sorted(_:)`, `LeaderboardRow.format` (delete if you remove `GooseChase/Race/`) |
 | `AppContractTests.swift` | `quarry://` scheme and Bonjour service in Info.plist, `NearbySession.serviceType`, `PlayerIdentity.id` (needs a hosted target) |
 
 ## Run from Xcode
 
-1. Open `Quarry.xcodeproj`.
+1. Open `GooseChase.xcodeproj`.
 2. Pick any iPhone Simulator as the run destination.
 3. Press **⌘U**.
 
@@ -24,7 +24,7 @@ Unit tests for the pure logic in the app, written with **Swift Testing** (`impor
 
 ```sh
 xcodebuild test \
-  -project Quarry.xcodeproj -scheme Quarry \
+  -project GooseChase.xcodeproj -scheme Quarry \
   -destination 'platform=iOS Simulator,name=iPhone 17' \
   CODE_SIGNING_ALLOWED=NO
 ```

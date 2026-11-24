@@ -33,13 +33,14 @@ jobs:
 
       - name: List schemes
         # The Quarry scheme must be shared (Product → Scheme → Manage Schemes → Shared),
-        # because xcuserdata/ is gitignored.
-        run: xcodebuild -list -project Quarry.xcodeproj
+        # because xcuserdata/ is gitignored. (The scheme itself isn't renamed to GooseChase
+        # yet — see docs/phase0/ISSUES.md 0.3.)
+        run: xcodebuild -list -project GooseChase.xcodeproj
 
       - name: Build
         run: |
           xcodebuild \
-            -project Quarry.xcodeproj \
+            -project GooseChase.xcodeproj \
             -scheme Quarry \
             -destination 'generic/platform=iOS Simulator' \
             CODE_SIGNING_ALLOWED=NO \
@@ -74,7 +75,7 @@ jobs:
       - name: Test
         run: |
           xcodebuild \
-            -project Quarry.xcodeproj \
+            -project GooseChase.xcodeproj \
             -scheme Quarry \
             -destination 'platform=iOS Simulator,name=${{ steps.simulator.outputs.name }}' \
             CODE_SIGNING_ALLOWED=NO \

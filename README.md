@@ -24,17 +24,16 @@ Built in about 8 hours at the iOSC Fall 2026 Hackathon with Swift and SwiftUI, f
 
 ## Running it
 - Xcode 26, iOS 26, a real iPhone (the camera, Live Activities and nearby play need a device).
-- Open `Quarry.xcodeproj`, choose the **Quarry** scheme, set Signing to your own team, then build and run.
+- Open `GooseChase.xcodeproj`, choose the **Quarry** scheme (not yet renamed to match), set Signing to your own team, then build and run.
 - For nearby play, install on two or more phones and allow **Local Network** when asked.
-- The code and project are named **Quarry**, the hackathon codename. The app shows as **GooseChase**.
 
 ## Project map
-- `Quarry/Hunt/`: create, play, cleared and finished screens, and the hunt session
-- `Quarry/Nearby/`: Join and Host tabs, lobby, QR, MultipeerConnectivity session
-- `Quarry/Vision/`: camera and Vision matching
-- `Quarry/Design/`: theme, sky and grass scene, the goose mascot (`GooseView`)
-- `Quarry/Intents/`: Siri, Shortcuts and Action Button intents
-- `QuarryWidgets/`: Live Activity, Dynamic Island and Apple Watch layouts
+- `GooseChase/Hunt/`: create, play, cleared and finished screens, and the hunt session
+- `GooseChase/Nearby/`: Join and Host tabs, lobby, QR, MultipeerConnectivity session
+- `GooseChase/Vision/`: camera and Vision matching
+- `GooseChase/Design/`: theme, sky and grass scene, the goose mascot (`GooseView`)
+- `GooseChase/Intents/`: Siri, Shortcuts and Action Button intents
+- `GooseChaseWidgets/`: Live Activity, Dynamic Island and Apple Watch layouts
 
 See `MAP.md` (every file and how the flows connect) and `DESIGN.md` (the design system). `PLAN.md` and `SPEC.md` are the archived hackathon planning docs.
 
@@ -42,7 +41,7 @@ See `MAP.md` (every file and how the flows connect) and `DESIGN.md` (the design 
 GooseChase was built at the **iOSC Fall 2026 Hackathon** (Sunday, November 8, 2026) with two teammates. Since then, it's continued **solo as a portfolio project**: clean-up, documentation, tests and CI first, then matching quality and new gameplay (see the roadmap below).
 
 ## Status / roadmap
-The code and Xcode project are still named **Quarry** (the hackathon codename); the app already displays as **GooseChase**. Renaming the project, targets and folders to GooseChase is planned for Phase 0, keeping the `quarry://` link scheme so existing QR codes keep working.
+The project, targets and folders have been renamed from the hackathon codename **Quarry** to **GooseChase** (the scheme is the one piece still pending), keeping the `quarry://` link scheme, the `com.quarryapp.hunt` file type and the `_quarry-hunt` Bonjour service so existing QR codes and builds keep working.
 
 | Phase | Focus | Highlights |
 |---|---|---|

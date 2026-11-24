@@ -1,18 +1,18 @@
-# GooseChase (Quarry) · Code map
+# GooseChase · Code map
 
 Where everything lives and what it does. **Read this before searching the codebase.** If you add, rename or delete a file, or change a public type or function, update this file in the same commit.
 
-_Rewritten 2026-11-19 from the actual file tree (not from the hackathon plan). The code is still named **Quarry**; the app displays as **GooseChase**._
+_Rewritten 2026-11-19 from the actual file tree (not from the hackathon plan); renamed 2026-11-23 from the hackathon codename **Quarry** to **GooseChase** (project, targets, folders — issue 0.3). The scheme itself is still named `Quarry`, not yet renamed to match._
 
 ## Targets
 
 | Target | Folder | Builds |
 |---|---|---|
-| `Quarry` | `Quarry/` | The iPhone app (iOS 26, Swift 5 mode, default actor isolation = MainActor). Synchronized folder: every file inside is compiled in automatically. |
-| `QuarryWidgetsExtension` | `QuarryWidgets/` | Widget extension that hosts **only** the Live Activity (Lock Screen, Dynamic Island, Apple Watch Smart Stack). |
-| _(planned)_ `GooseChaseTests` | `GooseChaseTests/` | Swift Testing unit tests. The files exist; the Xcode target does not yet (see `GooseChaseTests/README.md`). |
+| `GooseChase` | `GooseChase/` | The iPhone app (iOS 26, Swift 5 mode, default actor isolation = MainActor). Synchronized folder: every file inside is compiled in automatically. |
+| `GooseChaseWidgetsExtension` | `GooseChaseWidgets/` | Widget extension that hosts **only** the Live Activity (Lock Screen, Dynamic Island, Apple Watch Smart Stack). |
+| `GooseChaseTests` | `GooseChaseTests/` | Swift Testing unit tests, hosted by `GooseChase`. All tests pass. |
 
-`Quarry/Shared/HuntActivityAttributes.swift` is compiled into **both** targets (membership exception in `project.pbxproj`; don't move it).
+`GooseChase/Shared/HuntActivityAttributes.swift` is compiled into **both** targets (membership exception in `project.pbxproj`; don't move it).
 
 ## How the main flows connect
 
@@ -56,24 +56,24 @@ ContentView.launch(hunt, startAt) ──► PlayView (3-2-1 countdown) ──►
 | `PLAN.md`, `SPEC.md` | **Archived** hackathon planning docs (afternoon plan; scope/contracts/rules). Superseded by README/MAP/DESIGN and `docs/phase0/`. |
 | `AGENTS.md`, `CLAUDE.md` | Identical instructions for coding agents (read MAP, keep contracts, update MAP). Still point at SPEC.md. |
 | `NIGHTLY_SUMMARY.md` | Report from the overnight Phase 0 run. |
-| `docs/phase0/` | `DEAD_CODE.md`, `THEME_MERGE_PLAN.md`, `ISSUES.md`: Phase 0 analysis and issue drafts. `ci.yml`: the CI workflow, waiting to be copied to `.github/workflows/`. |
-| `GooseChaseTests/` | Swift Testing unit tests + `README.md` on adding the test target. Not compiled until the target exists. |
-| `.github/workflows/ci.yml` | _(after copying from `docs/phase0/ci.yml`)_ GitHub Actions build and a commented-out test job. |
+| `docs/phase0/` | `DEAD_CODE.md`, `THEME_MERGE_PLAN.md`, `ISSUES.md`: Phase 0 analysis and issue drafts (gitignored). `ci.yml`: the original draft CI workflow, already copied into `.github/workflows/`. |
+| `GooseChaseTests/` | Swift Testing unit tests + `README.md` on running them. Target exists and all tests pass. |
+| `.github/workflows/ci.yml` | GitHub Actions: a build job and a unit-test job (picks the first available iPhone simulator at runtime). |
 | `IconLayers/` | Source PNG/SVG layers and previews for the Icon Composer icon. |
 | `.agents/skills/` | Agent skill packs (SwiftUI, SwiftData, Swift concurrency). Not part of the app. |
 | `Claude outputs/` | Scratch output from AI helpers (gitignored). |
-| `.gitignore` | Ignores `.DS_Store`, `xcuserdata/`, build output, `.swiftpm/`, `Claude outputs/`. |
+| `.gitignore` | Ignores `.DS_Store`, `xcuserdata/`, build output, `.swiftpm/`, `Claude outputs/`, `NIGHTLY_SUMMARY.md`, `docs/phase0/`. |
 
-### `Quarry/` (app root)
+### `GooseChase/` (app root)
 | File | What it does |
 |---|---|
-| `QuarryApp.swift` | `@main`: builds the SwiftData container (`Hunt`, `Checkpoint`), shows `ContentView`, forces light appearance. |
+| `GooseChaseApp.swift` | `@main`: builds the SwiftData container (`Hunt`, `Checkpoint`), shows `ContentView`, forces light appearance. |
 | `ContentView.swift` | App shell: `AppTab` + Join/Host/Create `TabView`, the game launcher (`GameLaunch` → full-screen `PlayView`), `finish` (best time, Nearby teardown), `onOpenURL` for join links and `.quarryhunt` files, stale Live Activity cleanup; shared `huntThumbnail(_:size:)`; private `ImportHuntSheet`. |
 | `Info.plist` | Extra keys merged into the generated plist: `quarry://` URL scheme, Local Network usage + Bonjour `_quarry-hunt._tcp/_udp`, `.quarryhunt` exported UTType and document type, Siri alternative app names. |
 | `Assets.xcassets` | Accent color and the `GooseChase` icon dataset (`d f` goose image). |
 | `GooseChase.icon` | Icon Composer layered app icon (light/dark/tinted). |
 
-### `Quarry/Design/` (brand look)
+### `GooseChase/Design/` (brand look)
 | File | What it does |
 |---|---|
 | `Theme.swift` | `Brand` colors from the icon, `SkyBackground`, `GrassHill`/`GrassShape`, `.gooseProminent()` main-action button, `.skyCard()` (glass card; to be replaced). |
@@ -82,7 +82,7 @@ ContentView.launch(hunt, startAt) ──► PlayView (3-2-1 countdown) ──►
 | `HuntTabBackground.swift` | Pale-sky list background that keeps the status-bar area sky blue. |
 | `HuntTabSceneShape.swift` | Curved bottom edge for the tab header scene. |
 
-### `Quarry/Hunt/` (create + play)
+### `GooseChase/Hunt/` (create + play)
 | File | What it does |
 |---|---|
 | `CreateTab.swift` | Create tab: your authored hunts (`!isJoined`), New hunt, edit/play solo/share (AirDrop)/delete; defines `HuntRow` (also used by Host). |
@@ -97,7 +97,7 @@ ContentView.launch(hunt, startAt) ──► PlayView (3-2-1 countdown) ──►
 | `QuarryTheme.swift` | Cody's semantic palette + spacing/radius tokens (ivory/orange). Live; to be merged into `Brand`. |
 | `QuarryMetricView.swift` | Metric tile (title, value, symbol); used by `HuntEditorView`. |
 
-### `Quarry/Nearby/` (joining + hosting)
+### `GooseChase/Nearby/` (joining + hosting)
 | File | What it does |
 |---|---|
 | `NearbySession.swift` | MultipeerConnectivity host/join by room code, hunt transfer, synced `.start(at:)`, retries/reconnects, forwards race messages to `RaceSession`; `MultipeerBridge` delegate. |
@@ -107,7 +107,7 @@ ContentView.launch(hunt, startAt) ──► PlayView (3-2-1 countdown) ──►
 | `QRCodeView.swift` | Renders a crisp QR for a URL (Core Image). |
 | `QRScannerView.swift` | VisionKit `DataScannerViewController` QR scanner; accepts `quarry://join?code=` or a bare 4-character code. |
 
-### `Quarry/Vision/` (camera + matching)
+### `GooseChase/Vision/` (camera + matching)
 | File | What it does |
 |---|---|
 | `VisionMatcher.swift` | Feature prints: `makeReferencePrint(from:)`, `bestDistance(from:to:)` (whole frame, center crop, salient-object crop), `score(forDistance:strong:weak:)` (0.45 → 1, 1.0 → 0). |
@@ -115,23 +115,23 @@ ContentView.launch(hunt, startAt) ──► PlayView (3-2-1 countdown) ──►
 | `CameraCaptureView.swift` | Full-screen camera: preview, match ring, 0.85 threshold, auto/manual verified capture, permission/retry states; also used for plain reference capture. |
 | `VerifyCameraView.swift` | Thin wrapper: `CameraCaptureView` with a checkpoint's clue and reference prints → `onCleared`. |
 
-### `Quarry/Intents/`
+### `GooseChase/Intents/`
 | File | What it does |
 |---|---|
 | `GooseChaseIntents.swift` | `CurrentClueIntent`, `SnapCheckpointIntent`, `JoinGameIntent`, `GooseChaseShortcuts` phrases; `HuntSession.active` weak reference. |
 
-### `Quarry/LiveActivity/`
+### `GooseChase/LiveActivity/`
 | File | What it does |
 |---|---|
 | `LiveActivityManager.swift` | Starts/updates/ends the hunt Live Activity (local updates only, works with a free team); `endAllStale()`. |
 
-### `Quarry/Race/` (dormant live leaderboard)
+### `GooseChase/Race/` (dormant live leaderboard)
 | File | What it does |
 |---|---|
 | `RaceSession.swift` | `@Observable` standings: merge/sort `PlayerProgress`, host broadcasts leaderboard, players send progress. **Dormant** — `begin` is never called, so every race branch elsewhere is dead at runtime; parked for Phase 2, not removed. |
 | `LeaderboardView.swift` | Leaderboard list with rank badges and progress segments (QuarryTheme colors). |
 
-### `Quarry/Shared/` (wire formats and models; change carefully)
+### `GooseChase/Shared/` (wire formats and models; change carefully)
 | File | What it does |
 |---|---|
 | `Models.swift` | SwiftData `Hunt` (title, shareID, hostName, isJoined, bestTime, checkpoints, `isPlayable`) and `Checkpoint` (clue, kind, referencePrints, thumbnail, targetLabel, optional location, `isReady`); `CheckpointKind`. |
@@ -139,18 +139,18 @@ ContentView.launch(hunt, startAt) ──► PlayView (3-2-1 countdown) ──►
 | `RaceMessages.swift` | `PlayerProgress`, `NearbyMessage` (hello/hunt/start/progress/leaderboard), `RoomCode` (make, joinURL, code(from:)), `PlayerIdentity` (UserDefaults id + name). |
 | `HuntActivityAttributes.swift` | Live Activity attributes + `ContentState`; preview samples. **In both targets.** |
 
-### `QuarryWidgets/` (widget extension)
+### `GooseChaseWidgets/` (widget extension)
 | File | What it does |
 |---|---|
-| `QuarryWidgetsBundle.swift` | `@main` bundle containing only `HuntLiveActivity`. |
+| `GooseChaseWidgetsBundle.swift` | `@main` bundle containing only `HuntLiveActivity`. |
 | `QuarryWidgetsLiveActivity.swift` | `HuntLiveActivity`: Lock Screen, Dynamic Island (expanded/compact/minimal), Watch Smart Stack (`.supplementalActivityFamilies([.small])`), `widgetURL quarry://camera`; `HuntProgress`, `ProgressRing`, `ElapsedTimer`, `LockScreenHuntView`; previews. |
 | `ActivityGoose.swift` | Static goose drawing for the activity (mirrors Brand colors by hand). |
 | `ActivityMascot.swift` | Goose with a push transition between states (respects Reduce Motion / luminance). |
 | `ActivityGrass.swift` | Grass shape under the goose. |
 | `Info.plist`, `Assets.xcassets` | Extension point config, widget colors. |
 
-## Project settings (`Quarry.xcodeproj`)
+## Project settings (`GooseChase.xcodeproj`)
 - Deployment target iOS 26.0; `SWIFT_VERSION = 5.0`; app target uses `SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor` and approachable concurrency.
-- Generated Info.plist keys: `NSCameraUsageDescription`, `NSLocationWhenInUseUsageDescription` (location is not built yet), `NSSupportsLiveActivities`, display name GooseChase; merged with `Quarry/Info.plist`.
-- Bundle IDs `rgs.Quarry` and `rgs.Quarry.QuarryWidgets`. The project-level and target-level `DEVELOPMENT_TEAM` values differ (team members' teams); set both to your Personal Team.
-- No shared scheme yet (schemes live in gitignored `xcuserdata/`). Share the `Quarry` scheme before relying on CI.
+- Generated Info.plist keys: `NSCameraUsageDescription`, `NSLocationWhenInUseUsageDescription` (location is not built yet), `NSSupportsLiveActivities`, display name GooseChase; merged with `GooseChase/Info.plist`.
+- Bundle IDs `rgs.Quarry` and `rgs.Quarry.QuarryWidgets` — kept as-is through the rename on purpose.
+- Scheme is shared (`GooseChase.xcodeproj/xcshareddata/xcschemes/`) but still named `Quarry` and `QuarryWidgetsExtension` — not yet renamed to match (issue 0.3).

@@ -8,7 +8,7 @@ _Restructured 2026-11-19 around the unified design system proposed in `docs/phas
 
 - iOS decides how things *work* (navigation, sheets, lists, forms, tab bar). This system decides how they *look*.
 - Personality comes from the sky/grass scene, the goose and SF Rounded, never from custom chrome.
-- The app window is light-only (`QuarryApp` sets `.preferredColorScheme(.light)`); the camera is always dark.
+- The app window is light-only (`GooseChaseApp` sets `.preferredColorScheme(.light)`); the camera is always dark.
 
 ## 2. Native Apple foundation (Cody)
 
@@ -16,7 +16,7 @@ Follow [Apple's Human Interface Guidelines](https://developer.apple.com/design/h
 
 ## 3. Color
 
-One palette: `Brand` in `Quarry/Design/Theme.swift`. The roles marked _(planned)_ come from the merge plan and replace `QuarryTheme`.
+One palette: `Brand` in `GooseChase/Design/Theme.swift`. The roles marked _(planned)_ come from the merge plan and replace `QuarryTheme`.
 
 | Token | Hex | Use |
 |---|---|---|
