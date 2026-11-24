@@ -143,37 +143,35 @@ struct PlayView: View {
     }
 
     private var topBar: some View {
-        HStack {
-            Button {
-                session.quit()
-                onClose()
-            } label: {
-                Image(systemName: "xmark")
-                    .font(.headline)
-                    .frame(width: 22, height: 22)
-            }
-            .buttonStyle(.glass)
-            .buttonBorderShape(.circle)
-            .accessibilityLabel("End hunt")
-
-            Spacer()
-
-            Text(session.startDate, style: .timer)
-                .font(.headline.monospacedDigit())
-                .padding(.horizontal, 14)
-                .padding(.vertical, 8)
-                .glassEffect(.regular, in: Capsule())
-
-            if RaceSession.shared.isActive {
+        GlassEffectContainer {
+            HStack {
                 Button {
-                    showLeaderboard = true
+                    session.quit()
+                    onClose()
                 } label: {
-                    Image(systemName: "list.number")
+                    Image(systemName: "xmark")
                         .font(.headline)
+                        .frame(width: 22, height: 22)
                 }
                 .buttonStyle(.glass)
-                .padding(.leading, 8)
-                .accessibilityLabel("Leaderboard")
+                .buttonBorderShape(.circle)
+                .accessibilityLabel("End hunt")
+
+                Spacer()
+
+                StatusPill { Text(session.startDate, style: .timer) }
+
+                if RaceSession.shared.isActive {
+                    Button {
+                        showLeaderboard = true
+                    } label: {
+                        Image(systemName: "list.number")
+                            .font(.headline)
+                    }
+                    .buttonStyle(.glass)
+                    .padding(.leading, 8)
+                    .accessibilityLabel("Leaderboard")
+                }
             }
         }
     }

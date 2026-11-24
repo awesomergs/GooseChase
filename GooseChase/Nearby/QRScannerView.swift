@@ -24,9 +24,10 @@ struct QRScannerView: View {
                     .overlay(alignment: .bottom) {
                         Text("Point at the host's QR code")
                             .font(.headline)
+                            .foregroundStyle(Brand.Camera.text)
                             .padding(.horizontal, 16)
                             .padding(.vertical, 10)
-                            .glassEffect()
+                            .background(Brand.Camera.scrim, in: Capsule())
                             .padding(.bottom, 40)
                     }
                 } else {

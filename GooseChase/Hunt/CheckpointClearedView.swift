@@ -31,11 +31,7 @@ struct CheckpointClearedView: View {
                         .offset(x: 10, y: 10)
                 }
 
-            Label(mmss(session.lastSplit ?? 0), systemImage: "stopwatch")
-                .font(.title3.weight(.semibold).monospacedDigit())
-                .padding(.horizontal, 16)
-                .padding(.vertical, 8)
-                .glassEffect(.regular, in: Capsule())
+            StatusPill { Label(mmss(session.lastSplit ?? 0), systemImage: "stopwatch") }
 
             rankLine
             Spacer()
@@ -76,8 +72,9 @@ struct CheckpointClearedView: View {
         } else {
             Image(systemName: "photo")
                 .font(.largeTitle)
+                .foregroundStyle(.white)
                 .frame(width: 130, height: 130)
-                .glassEffect(.regular, in: RoundedRectangle(cornerRadius: 22))
+                .background(Brand.skyDeep, in: RoundedRectangle(cornerRadius: 22))
         }
     }
 }

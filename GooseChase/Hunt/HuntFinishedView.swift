@@ -88,8 +88,9 @@ struct HuntFinishedView: View {
                 .overlay(RoundedRectangle(cornerRadius: 16).stroke(.white, lineWidth: 3))
         } else {
             Image(systemName: "photo")
+                .foregroundStyle(.white)
                 .frame(width: 90, height: 90)
-                .glassEffect(.regular, in: RoundedRectangle(cornerRadius: 16))
+                .background(Brand.skyDeep, in: RoundedRectangle(cornerRadius: 16))
         }
     }
 }

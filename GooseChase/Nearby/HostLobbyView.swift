@@ -113,7 +113,7 @@ struct HostLobbyView: View {
                         .frame(height: 50)
                     Text("Waiting for players… keep this screen open.")
                         .font(.subheadline)
-                        .opacity(0.9)
+                        .foregroundStyle(Brand.textSecondary)
                 }
                 .padding(.vertical, 2)
             } else {
@@ -121,14 +121,13 @@ struct HostLobbyView: View {
                     Label(name, systemImage: "checkmark.circle.fill")
                         .font(.headline)
                         .symbolRenderingMode(.palette)
-                        .foregroundStyle(.white, Brand.grass)
+                        .foregroundStyle(Brand.textPrimary, Brand.success)
                         .transition(.move(edge: .top).combined(with: .opacity))
                 }
             }
         }
-        .padding(18)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .glassEffect(.regular, in: RoundedRectangle(cornerRadius: 22))
+        .brandCard(.onSky)
         .animation(.spring, value: nearby.joinedPlayers)
     }
 }
