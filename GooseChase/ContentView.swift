@@ -91,23 +91,6 @@ struct GameLaunch: Identifiable {
     let startAt: Date?
 }
 
-/// Small helpers shared by the tabs.
-@ViewBuilder
-func huntThumbnail(_ data: Data?, size: CGFloat = 44) -> some View {
-    if let data, let image = UIImage(data: data) {
-        Image(uiImage: image)
-            .resizable()
-            .scaledToFill()
-            .frame(width: size, height: size)
-            .clipShape(RoundedRectangle(cornerRadius: size * 0.2))
-    } else {
-        Image(systemName: "flag.fill")
-            .foregroundStyle(Brand.sky)
-            .frame(width: size, height: size)
-            .background(Brand.sky.opacity(0.15), in: RoundedRectangle(cornerRadius: size * 0.2))
-    }
-}
-
 private struct IncomingPackage: Identifiable {
     var id: UUID { package.shareID }
     let package: HuntPackage

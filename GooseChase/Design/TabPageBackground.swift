@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// Keeps the status-bar area sky blue while the scrolling page stays pale blue.
-struct HuntTabBackground: View {
+struct TabPageBackground: View {
     var body: some View {
         GeometryReader { geometry in
             ZStack(alignment: .top) {
@@ -22,5 +22,5 @@ struct HuntTabBackground: View {
 }
 
 #Preview {
-    Color.clear.background(HuntTabBackground())
+    Color.clear.background(TabPageBackground())
 }

@@ -98,7 +98,7 @@ struct JoinTab: View {
 
     private var entryForm: some View {
         List {
-            HuntTabHeader(
+            SceneHeader(
                 title: isBusy ? "On our way…" : "Join a hunt",
                 subtitle: isBusy ? "Finding the host's phone." : "Your next chase starts here."
             )
@@ -204,7 +204,7 @@ struct JoinTab: View {
         .listRowSeparator(.hidden)
         .scrollContentBackground(.hidden)
         .scrollDismissesKeyboard(.interactively)
-        .background(HuntTabBackground())
+        .background(TabPageBackground())
     }
 
     @ViewBuilder
@@ -324,7 +324,7 @@ private struct GameRow: View {
 
     var body: some View {
         HStack(spacing: 12) {
-            huntThumbnail(hunt.orderedCheckpoints.first?.thumbnail)
+            HuntThumbnailView(data: hunt.orderedCheckpoints.first?.thumbnail)
             VStack(alignment: .leading, spacing: 2) {
                 Text(hunt.title)
                     .font(.headline)

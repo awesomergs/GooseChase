@@ -17,7 +17,7 @@ struct CreateTab: View {
     var body: some View {
         NavigationStack(path: $path) {
             List {
-                HuntTabHeader(title: "Make a little adventure", subtitle: "Hide it. Snap it. Write a clue.")
+                SceneHeader(title: "Make a little adventure", subtitle: "Hide it. Snap it. Write a clue.")
                     .listRowSeparator(.hidden)
                     .listRowInsets(EdgeInsets())
                     .listRowBackground(Color.clear)
@@ -126,7 +126,7 @@ struct CreateTab: View {
             .listRowSpacing(12)
             .listRowSeparator(.hidden)
             .scrollContentBackground(.hidden)
-            .background(HuntTabBackground())
+            .background(TabPageBackground())
             .navigationTitle("Your hunts")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar(path.isEmpty ? .hidden : .visible, for: .navigationBar)
@@ -153,7 +153,7 @@ struct HuntRow: View {
 
     var body: some View {
         HStack(spacing: 12) {
-            huntThumbnail(hunt.orderedCheckpoints.first?.thumbnail)
+            HuntThumbnailView(data: hunt.orderedCheckpoints.first?.thumbnail)
             VStack(alignment: .leading, spacing: 2) {
                 Text(hunt.title)
                     .font(.headline)

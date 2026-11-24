@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// The tab landing pages share the hunt's sky, grass, and running mascot.
-struct HuntTabHeader: View {
+struct SceneHeader: View {
     let title: LocalizedStringKey
     let subtitle: LocalizedStringKey
 
@@ -30,11 +30,11 @@ struct HuntTabHeader: View {
                     GrassHill()
                         .frame(height: 42)
                 }
-                .clipShape(HuntTabSceneShape())
+                .clipShape(SceneHeaderShape())
         }
     }
 }
 
 #Preview {
-    HuntTabHeader(title: "Join a hunt", subtitle: "Your next chase starts here.")
+    SceneHeader(title: "Join a hunt", subtitle: "Your next chase starts here.")
 }

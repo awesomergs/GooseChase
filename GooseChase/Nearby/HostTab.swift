@@ -20,7 +20,7 @@ struct HostTab: View {
     var body: some View {
         NavigationStack {
             List {
-                HuntTabHeader(title: "Bring the flock", subtitle: "Pick a hunt. Get everyone together.")
+                SceneHeader(title: "Bring the flock", subtitle: "Pick a hunt. Get everyone together.")
                     .listRowSeparator(.hidden)
                     .listRowInsets(EdgeInsets())
                     .listRowBackground(Color.clear)
@@ -94,7 +94,7 @@ struct HostTab: View {
             .listRowSpacing(12)
             .listRowSeparator(.hidden)
             .scrollContentBackground(.hidden)
-            .background(HuntTabBackground())
+            .background(TabPageBackground())
             .toolbar(.hidden, for: .navigationBar)
             .sheet(item: $lobbyHunt) { hunt in
                 HostLobbyView(hunt: hunt) { date in

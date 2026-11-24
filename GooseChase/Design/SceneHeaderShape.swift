@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// A shallow curved shoreline softens the header's transition into the page.
-struct HuntTabSceneShape: Shape {
+struct SceneHeaderShape: Shape {
     func path(in rect: CGRect) -> Path {
         let curveDepth: CGFloat = min(18, rect.height / 4)
         var path = Path()
@@ -18,7 +18,7 @@ struct HuntTabSceneShape: Shape {
 }
 
 #Preview {
-    HuntTabSceneShape()
+    SceneHeaderShape()
         .fill(.green)
         .frame(height: 100)
 }
