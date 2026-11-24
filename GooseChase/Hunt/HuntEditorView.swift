@@ -24,10 +24,10 @@ struct HuntEditorView: View {
                     ? AnyLayout(VStackLayout(spacing: 12))
                     : AnyLayout(HStackLayout(alignment: .top, spacing: 12))
                 layout {
-                    QuarryMetricView(title: "Checkpoints", value: Text("\(hunt.checkpoints.count)"), systemImage: "flag")
-                    QuarryMetricView(title: "Ready to play",
-                                     value: Text("\(hunt.checkpoints.count(where: \.isReady)) of \(hunt.checkpoints.count)"),
-                                     systemImage: "camera")
+                    MetricTile(title: "Checkpoints", value: Text("\(hunt.checkpoints.count)"), systemImage: "flag")
+                    MetricTile(title: "Ready to play",
+                               value: Text("\(hunt.checkpoints.count(where: \.isReady)) of \(hunt.checkpoints.count)"),
+                               systemImage: "camera")
                 }
                 .listRowInsets(EdgeInsets())
                 .listRowBackground(Color.clear)
